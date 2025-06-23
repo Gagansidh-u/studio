@@ -57,6 +57,7 @@ interface GiftCardItemProps {
 
 const platformIcons: Record<string, React.ReactNode> = {
     'Amazon': <AmazonIcon className="h-6 w-6 text-foreground" />,
+    'Amazon Prime': <AmazonIcon className="h-6 w-6 text-foreground" />,
     'Steam': <SteamIcon className="h-6 w-6 text-foreground" />,
     'Google Play': <GooglePlayIcon className="h-6 w-6 text-foreground" />,
     'Netflix': <NetflixIcon className="h-6 w-6 text-foreground" />,

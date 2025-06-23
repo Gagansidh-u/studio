@@ -1,6 +1,6 @@
 export type GiftCardType = {
   id: string;
-  platform: 'Amazon' | 'Steam' | 'Google Play' | 'Netflix' | 'Spotify';
+  platform: 'Amazon' | 'Amazon Prime' | 'Steam' | 'Google Play' | 'Netflix' | 'Spotify';
   name: string;
   value: number;
   imageUrl: string;

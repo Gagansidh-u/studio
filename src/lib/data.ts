@@ -42,7 +42,7 @@ export const giftCards: GiftCardType[] = [
   // Amazon Prime Membership
   {
     id: '21',
-    platform: 'Amazon',
+    platform: 'Amazon Prime',
     name: 'Prime Monthly',
     value: 299,
     imageUrl: 'https://placehold.co/600x400/00a8e1/ffffff',
@@ -54,7 +54,7 @@ export const giftCards: GiftCardType[] = [
   },
   {
     id: '22',
-    platform: 'Amazon',
+    platform: 'Amazon Prime',
     name: 'Prime Annual',
     value: 1499,
     imageUrl: 'https://placehold.co/600x400/00a8e1/ffffff',
@@ -65,7 +65,7 @@ export const giftCards: GiftCardType[] = [
   },
   {
     id: '23',
-    platform: 'Amazon',
+    platform: 'Amazon Prime',
     name: 'Prime Lite Annual',
     value: 799,
     imageUrl: 'https://placehold.co/600x400/00a8e1/ffffff',
