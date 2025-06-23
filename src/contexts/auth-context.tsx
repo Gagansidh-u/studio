@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
@@ -18,12 +17,9 @@ import { useRouter } from 'next/navigation';
 import { doc, onSnapshot, getDoc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
-const ADMIN_EMAIL = 'gagansidhu@flash.co';
-
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  isAdmin: boolean;
   walletBalance: number | null;
   walletCoins: number | null;
   login: typeof signInWithEmailAndPassword;
@@ -35,7 +31,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  isAdmin: false,
   walletBalance: null,
   walletCoins: null,
   login: async () => { throw new Error('login not implemented'); },
@@ -47,7 +42,6 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [walletCoins, setWalletCoins] = useState<number | null>(null);
   const router = useRouter();
@@ -56,7 +50,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setIsAdmin(user.email === ADMIN_EMAIL);
         const walletRef = doc(db, 'wallets', user.uid);
         const walletSnap = await getDoc(walletRef);
         if (!walletSnap.exists()) {
@@ -69,8 +62,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             creationTime: serverTimestamp(),
           });
         }
-      } else {
-        setIsAdmin(false);
       }
       setUser(user);
       setLoading(false);
@@ -133,7 +124,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const value: AuthContextType = {
     user,
     loading,
-    isAdmin,
     walletBalance,
     walletCoins,
     login: (auth: Auth, email: string, p: string) => signInWithEmailAndPassword(auth, email, p),

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Gift, LogIn, LogOut, ShoppingBag, User, UserPlus, Wallet, Trash2, AlertCircle, LayoutDashboard } from 'lucide-react';
@@ -28,7 +27,7 @@ import { Label } from './ui/label';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 export default function Header() {
-  const { user, logout, walletBalance, deleteAccount, isAdmin } = useAuth();
+  const { user, logout, walletBalance, deleteAccount } = useAuth();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [password, setPassword] = useState('');
@@ -98,14 +97,6 @@ export default function Header() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {isAdmin && (
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin/dashboard">
-                        <LayoutDashboard />
-                        Admin Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
                   <DropdownMenuItem asChild>
                     <Link href="/orders">
                       <ShoppingBag />
