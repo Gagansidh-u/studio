@@ -51,7 +51,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Card className="flex h-full cursor-pointer flex-col overflow-hidden rounded-xl shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+        <Card className="flex h-full cursor-pointer flex-col overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
           <CardHeader className="flex-row items-start gap-4 space-y-0 p-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
               {platformIcons[card.platform]}
@@ -73,7 +73,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
             </div>
           </CardContent>
           <CardFooter className="flex items-center justify-between p-4">
-            <Badge variant="secondary" className="text-base font-bold text-accent-foreground bg-accent/50 border-accent">
+            <Badge variant="secondary" className="text-base font-bold">
               ${card.value}
             </Badge>
             <Button size="sm" onClick={(e) => {
