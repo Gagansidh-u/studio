@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -16,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import Header from '@/components/header';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { GoogleIcon } from '@/components/icons/google-icon';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -24,8 +26,9 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, signInWithGoogle } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,6 +47,19 @@ export default function LoginPage() {
       setError(error.message);
     }
   }
+
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setIsGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      router.push('/');
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -92,11 +108,31 @@ export default function LoginPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting || isGoogleLoading}>
                   {form.formState.isSubmitting ? 'Logging in...' : 'Login'}
                 </Button>
               </form>
             </Form>
+             <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">
+                    Or continue with
+                    </span>
+                </div>
+            </div>
+            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={form.formState.isSubmitting || isGoogleLoading}>
+                {isGoogleLoading ? (
+                    'Signing in...'
+                ) : (
+                    <>
+                        <GoogleIcon className="mr-2 h-4 w-4" />
+                        Google
+                    </>
+                )}
+            </Button>
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{' '}
               <Link href="/signup" className="underline">
