@@ -108,7 +108,7 @@ export default function OrdersPage() {
                     <TableHead>Amount</TableHead>
                     <TableHead>Coins Used</TableHead>
                     <TableHead>Coins Earned</TableHead>
-                    <TableHead>Payment</TableHead>
+                    <TableHead>Payment Method</TableHead>
                     <TableHead className="text-right">Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -129,7 +129,7 @@ export default function OrdersPage() {
                        <TableCell className="flex items-center gap-1">
                         {order.coinsEarned ? <><Coins className="h-4 w-4 text-yellow-400" /> {order.coinsEarned}</> : '-'}
                       </TableCell>
-                      <TableCell className="capitalize">{order.paymentMethod}</TableCell>
+                      <TableCell>{order.paymentMethod === 'wallet' ? 'Wallet' : 'PG'}</TableCell>
                       <TableCell className="text-right">
                         <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
                       </TableCell>
