@@ -4,13 +4,13 @@ import Header from "@/components/header";
 export default function Home() {
   return (
     <div className="relative min-h-screen">
-      <div className="fixed inset-0 z-0 h-full w-full bg-background bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
+      <div className="absolute inset-0 z-0 h-full w-full bg-gradient-to-r from-background via-black to-background bg-[length:400%_400%] animate-[animated-gradient_15s_ease_infinite]"></div>
 
       <div className="relative z-10 flex min-h-screen flex-col">
         <Header />
         <main className="container mx-auto flex-1 px-4 py-8 md:px-6 lg:py-12">
           <div className="mx-auto max-w-3xl text-center">
-            <h1 className="font-headline text-4xl font-bold tracking-tight text-primary sm:text-5xl md:text-6xl">
+            <h1 className="font-headline text-4xl font-bold tracking-tight bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent sm:text-5xl md:text-6xl">
               Unlock Your Digital World
             </h1>
             <p className="mt-6 text-lg text-muted-foreground md:text-xl">

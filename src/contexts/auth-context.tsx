@@ -2,10 +2,10 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, Auth, signInWithPopup } from 'firebase/auth';
-import { auth, db, googleProvider } from '@/lib/firebase';
+import { onAuthStateChanged, User, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, Auth } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
-import { doc, onSnapshot, getDoc, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 interface AuthContextType {
   user: User | null;
@@ -14,7 +14,6 @@ interface AuthContextType {
   login: typeof signInWithEmailAndPassword;
   signup: typeof createUserWithEmailAndPassword;
   logout: () => void;
-  signInWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -24,7 +23,6 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => { throw new Error('login not implemented'); },
   signup: async () => { throw new Error('signup not implemented'); },
   logout: () => {},
-  signInWithGoogle: async () => { throw new Error('signInWithGoogle not implemented'); },
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -70,26 +68,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/login');
   };
 
-  const signInWithGoogle = async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      
-      const walletRef = doc(db, 'wallets', user.uid);
-      const walletSnap = await getDoc(walletRef);
-
-      if (!walletSnap.exists()) {
-        await setDoc(doc(db, "wallets", user.uid), {
-          balance: 0,
-          userId: user.uid,
-        });
-      }
-    } catch (error) {
-      console.error("Error during Google sign-in:", error);
-      throw error;
-    }
-  };
-
   const value: AuthContextType = {
     user,
     loading,
@@ -97,7 +75,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login: (auth: Auth, email: string, p: string) => signInWithEmailAndPassword(auth, email, p),
     signup: (auth: Auth, email: string, p: string) => createUserWithEmailAndPassword(auth, email, p),
     logout,
-    signInWithGoogle,
   };
 
   return (

@@ -43,39 +43,39 @@ body {
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
-    --background: 240 10% 3.9%;
+    --background: 240 10% 3%;
     --foreground: 210 20% 98%;
-    --card: 240 10% 3.9%;
+    --card: 240 10% 6%;
     --card-foreground: 210 20% 98%;
     --popover: 240 10% 3.9%;
     --popover-foreground: 210 20% 98%;
-    --primary: 185 90% 55%;
-    --primary-foreground: 185 90% 10%;
+    --primary: 142 71% 45%;
+    --primary-foreground: 142 71% 15%;
     --secondary: 240 5% 15%;
     --secondary-foreground: 210 20% 98%;
     --muted: 240 5% 15%;
     --muted-foreground: 210 20% 65%;
-    --accent: 320 85% 60%;
-    --accent-foreground: 210 20% 98%;
+    --accent: 142 80% 55%;
+    --accent-foreground: 142 71% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5% 20%;
+    --border: 240 5% 15%;
     --input: 240 5% 20%;
-    --ring: 185 90% 55%;
-    --chart-1: 185 90% 55%;
-    --chart-2: 320 85% 60%;
+    --ring: 142 71% 45%;
+    --chart-1: 142 71% 45%;
+    --chart-2: 152 85% 60%;
     --chart-3: 50 90% 55%;
     --chart-4: 250 90% 60%;
-    --chart-5: 120 80% 50%;
+    --chart-5: 320 80% 50%;
     --radius: 0.75rem;
     --sidebar-background: 240 10% 3.9%;
     --sidebar-foreground: 210 20% 98%;
-    --sidebar-primary: 185 90% 55%;
-    --sidebar-primary-foreground: 185 90% 10%;
+    --sidebar-primary: 142 71% 45%;
+    --sidebar-primary-foreground: 142 71% 15%;
     --sidebar-accent: 240 5% 20%;
     --sidebar-accent-foreground: 210 20% 98%;
     --sidebar-border: 240 5% 15%;
-    --sidebar-ring: 185 90% 55%;
+    --sidebar-ring: 142 71% 45%;
   }
 }
 
@@ -85,5 +85,17 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@keyframes animated-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
   }
 }
