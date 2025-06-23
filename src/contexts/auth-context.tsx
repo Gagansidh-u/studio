@@ -5,7 +5,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { onAuthStateChanged, User, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, Auth } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc, setDoc } from 'firebase/firestore';
 
 interface AuthContextType {
   user: User | null;
@@ -35,7 +35,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Check for wallet and create if it doesn't exist. This handles existing users.
+        const walletRef = doc(db, 'wallets', user.uid);
+        const walletSnap = await getDoc(walletRef);
+        if (!walletSnap.exists()) {
+          await setDoc(walletRef, {
+            balance: 0,
+            coins: 0,
+            userId: user.uid,
+          });
+        }
+      }
       setUser(user);
       setLoading(false);
     });
