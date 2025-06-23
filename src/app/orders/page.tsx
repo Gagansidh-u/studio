@@ -9,13 +9,13 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import type { Order } from '@/lib/types';
 import Header from '@/components/header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Coins } from 'lucide-react';
+import { Coins, CreditCard, Landmark, Mail, Calendar, Hash, CheckCircle, Clock } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const getStatusVariant = (status: Order['status']): BadgeProps['variant'] => {
   switch (status) {
@@ -24,17 +24,28 @@ const getStatusVariant = (status: Order['status']): BadgeProps['variant'] => {
     case 'Pending':
       return 'warning';
     case 'Processing':
-      return 'default'; // 'default' uses primary color (blue)
+      return 'default';
     default:
       return 'secondary';
   }
 };
+
+const OrderDetailItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: React.ReactNode }) => (
+    <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
+        <div className="text-primary">{icon}</div>
+        <div>
+            <p className="text-sm text-muted-foreground">{label}</p>
+            <p className="text-sm font-medium">{value}</p>
+        </div>
+    </div>
+);
 
 export default function OrdersPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -73,9 +84,9 @@ export default function OrdersPage() {
                 <Skeleton className="h-6 w-1/2" />
             </div>
             <div className="mt-8 space-y-4">
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-20 w-full rounded-lg" />
+                <Skeleton className="h-20 w-full rounded-lg" />
+                <Skeleton className="h-20 w-full rounded-lg" />
             </div>
         </main>
       </div>
@@ -94,49 +105,32 @@ export default function OrdersPage() {
           <CardContent>
             {loading ? (
                 <div className="space-y-4">
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-20 w-full rounded-lg" />
+                    <Skeleton className="h-20 w-full rounded-lg" />
+                    <Skeleton className="h-20 w-full rounded-lg" />
                 </div>
             ) : orders.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Recipient Email</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Coins Used</TableHead>
-                    <TableHead>Coins Earned</TableHead>
-                    <TableHead>Payment Method</TableHead>
-                    <TableHead className="text-right">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {orders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell>
-                        {order.purchaseDate 
-                          ? format(order.purchaseDate.toDate(), 'PPpp')
-                          : 'N/A'}
-                      </TableCell>
-                      <TableCell className="font-medium">{order.cardName}</TableCell>
-                      <TableCell>{order.recipientEmail}</TableCell>
-                      <TableCell>₹{order.finalAmount ?? order.amount}</TableCell>
-                      <TableCell className="flex items-center gap-1">
-                        {order.coinsUsed ? <><Coins className="h-4 w-4 text-yellow-400" /> {order.coinsUsed}</> : '-'}
-                      </TableCell>
-                       <TableCell className="flex items-center gap-1">
-                        {order.coinsEarned ? <><Coins className="h-4 w-4 text-yellow-400" /> {order.coinsEarned}</> : '-'}
-                      </TableCell>
-                      <TableCell>{order.paymentMethod === 'wallet' ? 'Wallet' : 'PG'}</TableCell>
-                      <TableCell className="text-right">
+              <div className="space-y-4">
+                {orders.map((order) => (
+                  <Card 
+                    key={order.id} 
+                    className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50"
+                    onClick={() => setSelectedOrder(order)}
+                  >
+                    <CardContent className="flex items-center justify-between p-4">
+                      <div className="flex-1 overflow-hidden">
+                        <p className="font-medium truncate">{order.cardName}</p>
+                        <p className="text-sm text-muted-foreground">
+                           {order.purchaseDate ? format(order.purchaseDate.toDate(), 'PP') : 'N/A'}
+                        </p>
+                      </div>
+                      <div className="ml-4 flex-shrink-0">
                         <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             ) : (
               <div className="text-center py-16">
                 <p className="text-muted-foreground">You haven&apos;t made any purchases yet.</p>
@@ -148,6 +142,63 @@ export default function OrdersPage() {
           </CardContent>
         </Card>
       </main>
+
+      <Dialog open={!!selectedOrder} onOpenChange={(isOpen) => !isOpen && setSelectedOrder(null)}>
+        <DialogContent className="sm:max-w-lg">
+          {selectedOrder && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedOrder.cardName}</DialogTitle>
+                <DialogDescription>
+                  Order details for your purchase on {selectedOrder.purchaseDate ? format(selectedOrder.purchaseDate.toDate(), 'PP') : 'N/A'}.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+                  <OrderDetailItem 
+                    icon={<CheckCircle className="h-5 w-5" />}
+                    label="Status"
+                    value={<Badge variant={getStatusVariant(selectedOrder.status)}>{selectedOrder.status}</Badge>}
+                  />
+                   <OrderDetailItem 
+                    icon={<Calendar className="h-5 w-5" />}
+                    label="Purchase Date"
+                    value={selectedOrder.purchaseDate ? format(selectedOrder.purchaseDate.toDate(), 'PPpp') : 'N/A'}
+                  />
+                  <OrderDetailItem 
+                    icon={<Mail className="h-5 w-5" />}
+                    label="Recipient Email"
+                    value={selectedOrder.recipientEmail}
+                  />
+                   <OrderDetailItem 
+                    icon={selectedOrder.paymentMethod === 'wallet' ? <CreditCard className="h-5 w-5" /> : <Landmark className="h-5 w-5" />}
+                    label="Payment Method"
+                    value={selectedOrder.paymentMethod === 'wallet' ? 'Wallet' : 'PG'}
+                  />
+                   <OrderDetailItem 
+                    icon={<CreditCard className="h-5 w-5" />}
+                    label="Final Amount"
+                    value={`₹${(selectedOrder.finalAmount ?? selectedOrder.amount).toFixed(2)}`}
+                  />
+                   <OrderDetailItem 
+                    icon={<Coins className="h-5 w-5 text-yellow-500" />}
+                    label="Coins Earned"
+                    value={selectedOrder.coinsEarned ?? 0}
+                  />
+                   <OrderDetailItem 
+                    icon={<Coins className="h-5 w-5 text-yellow-500" />}
+                    label="Coins Used"
+                    value={selectedOrder.coinsUsed ?? 0}
+                  />
+                  <OrderDetailItem 
+                    icon={<Hash className="h-5 w-5" />}
+                    label="Payment ID"
+                    value={<span className="break-all">{selectedOrder.paymentId}</span>}
+                  />
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
