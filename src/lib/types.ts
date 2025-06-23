@@ -25,6 +25,7 @@ export type Order = {
   paymentMethod: 'razorpay' | 'wallet';
   coinsEarned?: number;
   coinsUsed?: number;
+  recipientEmail: string;
 };
 
 export type Wallet = {

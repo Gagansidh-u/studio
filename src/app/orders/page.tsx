@@ -91,6 +91,7 @@ export default function OrdersPage() {
                   <TableRow>
                     <TableHead>Date</TableHead>
                     <TableHead>Product</TableHead>
+                    <TableHead>Recipient Email</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Coins Used</TableHead>
                     <TableHead>Coins Earned</TableHead>
@@ -107,6 +108,7 @@ export default function OrdersPage() {
                           : 'N/A'}
                       </TableCell>
                       <TableCell className="font-medium">{order.cardName}</TableCell>
+                      <TableCell>{order.recipientEmail}</TableCell>
                       <TableCell>₹{order.finalAmount ?? order.amount}</TableCell>
                       <TableCell className="flex items-center gap-1">
                         {order.coinsUsed ? <><Coins className="h-4 w-4 text-yellow-400" /> {order.coinsUsed}</> : '-'}

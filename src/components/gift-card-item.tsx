@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -87,6 +87,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
   const [purchaseDetails, setPurchaseDetails] = useState<{name: string; amount: number} | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [applyCoins, setApplyCoins] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState("");
 
   const allPlatformCards = giftCards.filter(c => c.platform === card.platform);
   const membershipPlans = allPlatformCards.filter(c => c.category === 'Membership');
@@ -101,9 +102,15 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      customAmount: "",
+      customAmount: 0,
     },
   });
+
+  useEffect(() => {
+    if (purchaseDetails && user?.email) {
+      setRecipientEmail(user.email);
+    }
+  }, [purchaseDetails, user?.email]);
   
   const aiHint = `${card.platform.toLowerCase().replace(' ', '')} card`;
 
@@ -143,10 +150,11 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
       setPurchaseDetails(null);
       setIsProcessing(false);
       setApplyCoins(false);
+      setRecipientEmail("");
     }
   };
 
-  const processPurchase = async (paymentMethod: 'wallet' | 'razorpay', paymentId: string) => {
+  const processPurchase = async (paymentMethod: 'wallet' | 'razorpay', paymentId: string, email: string) => {
     if (!user || !purchaseDetails || walletCoins === null || walletBalance === null) return;
     setIsProcessing(true);
 
@@ -204,7 +212,8 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                 paymentId: paymentId,
                 paymentMethod: paymentMethod,
                 coinsUsed: coinsToUse,
-                coinsEarned: coinsEarned
+                coinsEarned: coinsEarned,
+                recipientEmail: email,
             });
         });
         
@@ -224,10 +233,18 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
   };
 
   const handleWalletPurchase = () => {
-    processPurchase('wallet', `wallet_${Date.now()}`);
+    if (!recipientEmail || !/\S+@\S+\.\S+/.test(recipientEmail)) {
+      toast({ variant: 'destructive', title: 'Invalid Email', description: 'Please enter a valid email to receive the gift card.' });
+      return;
+    }
+    processPurchase('wallet', `wallet_${Date.now()}`, recipientEmail);
   }
   
   const handleRazorpayPurchase = async () => {
+    if (!recipientEmail || !/\S+@\S+\.\S+/.test(recipientEmail)) {
+        toast({ variant: 'destructive', title: 'Invalid Email', description: 'Please enter a valid email to receive the gift card.' });
+        return;
+    }
     if (!user || !purchaseDetails || walletCoins === null) return;
     
     setIsProcessing(true);
@@ -247,7 +264,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
         description: `Purchase ${name}`,
         image: "https://placehold.co/128x128.png",
         handler: async function (response: any) {
-            await processPurchase('razorpay', response.razorpay_payment_id);
+            await processPurchase('razorpay', response.razorpay_payment_id, recipientEmail);
         },
         modal: {
             ondismiss: function() {
@@ -468,6 +485,21 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                     You are buying <span className="font-bold">{purchaseDetails?.name}</span> for <span className="font-bold">₹{purchaseDetails?.amount}</span>.
                 </DialogDescription>
             </DialogHeader>
+
+            <div className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="recipient-email">Send Gift Card to:</Label>
+                    <Input
+                        id="recipient-email"
+                        type="email"
+                        placeholder="Enter email to receive the code"
+                        value={recipientEmail}
+                        onChange={(e) => setRecipientEmail(e.target.value)}
+                        disabled={isProcessing}
+                    />
+                    <p className="text-xs text-muted-foreground">The gift card details will be sent to this email address.</p>
+                </div>
+            </div>
 
             <div className="rounded-lg border border-primary/20 bg-primary/10 p-3 text-center text-sm font-medium text-primary">
                 <p>You'll earn <span className="font-bold">1% unlimited cashback</span> in Grock Coins on this purchase!</p>
