@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -6,32 +7,48 @@ import GiftCardItem from "./gift-card-item";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import type { GiftCardType } from "@/lib/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Helper to get a unique representative card for each platform from a given list of cards.
+const getDisplayCards = (cards: GiftCardType[]) => {
+  const uniquePlatforms = [...new Set(cards.map(card => card.platform))];
+  return uniquePlatforms.map(platform => {
+    return cards.find(card => card.platform === platform)!;
+  }).filter(Boolean); // Ensure no undefined values
+};
 
 export default function GiftCardList() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeMembershipPlanType, setActiveMembershipPlanType] = useState("all"); // 'all', 'monthly', 'annual'
 
-  const filterAndUniqueCards = (cards: GiftCardType[]) => {
-    const uniqueByPlatform = cards.filter(
-      (card, index, self) =>
-        index === self.findIndex((c) => c.platform === card.platform)
-    );
+  // Filter cards based on search query
+  const searchedCards = giftCards.filter(
+    (card) =>
+      card.platform.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      card.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-    if (!searchQuery) {
-        return uniqueByPlatform;
-    }
+  // Get display cards for "Gift Cards" tab
+  const giftCardResults = getDisplayCards(
+    searchedCards.filter((card) => card.category === 'Gift Card')
+  );
 
-    return uniqueByPlatform.filter(
-        (card) =>
-          card.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          card.platform.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-  }
+  // Filter memberships by plan type for the "Memberships" tab
+  const allMemberships = searchedCards.filter((card) => card.category === 'Membership');
+  const planTypeFilteredMemberships = activeMembershipPlanType === 'all'
+    ? allMemberships
+    : allMemberships.filter((card) => card.planType?.toLowerCase() === activeMembershipPlanType);
+  
+  const membershipResults = getDisplayCards(planTypeFilteredMemberships);
 
-  const allGiftCards = giftCards.filter(card => card.category === 'Gift Card');
-  const allMemberships = giftCards.filter(card => card.category === 'Membership');
-
-  const filteredGiftCards = filterAndUniqueCards(allGiftCards);
-  const filteredMemberships = filterAndUniqueCards(allMemberships);
+  // Component to render the grid of cards
+  const CardGrid = ({ cards }: { cards: GiftCardType[] }) => (
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {cards.map((card) => (
+        <GiftCardItem key={card.platform} card={card} />
+      ))}
+    </div>
+  );
 
   return (
     <div className="mt-12 space-y-16">
@@ -46,36 +63,45 @@ export default function GiftCardList() {
         />
       </div>
 
-      {filteredGiftCards.length > 0 && (
-        <section>
-            <h2 className="mb-8 text-center font-headline text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-                Gift Cards
-            </h2>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredGiftCards.map((card) => (
-                    <GiftCardItem key={card.id} card={card} />
-                ))}
-            </div>
-        </section>
-      )}
-
-      {filteredMemberships.length > 0 && (
-        <section>
-            <h2 className="mb-8 text-center font-headline text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-                Membership Vouchers
-            </h2>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredMemberships.map((card) => (
-                    <GiftCardItem key={card.id} card={card} />
-                ))}
-            </div>
-        </section>
-      )}
-
-      {filteredGiftCards.length === 0 && filteredMemberships.length === 0 && (
+      {searchedCards.length === 0 ? (
          <div className="py-16 text-center">
             <p className="text-lg text-muted-foreground">No items found for &quot;{searchQuery}&quot;.</p>
         </div>
+      ) : (
+        <Tabs defaultValue="gift-cards" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="gift-cards">Gift Cards</TabsTrigger>
+            <TabsTrigger value="memberships">Membership Vouchers</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="gift-cards" className="mt-8">
+            {giftCardResults.length > 0 ? (
+              <CardGrid cards={giftCardResults} />
+            ) : (
+              <div className="py-16 text-center">
+                <p className="text-lg text-muted-foreground">No gift cards found.</p>
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="memberships" className="mt-8">
+            <Tabs defaultValue={activeMembershipPlanType} onValueChange={setActiveMembershipPlanType} className="w-full">
+              <TabsList className="mb-8 grid w-full max-w-md mx-auto grid-cols-3">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                <TabsTrigger value="annual">Annual</TabsTrigger>
+              </TabsList>
+              
+              {membershipResults.length > 0 ? (
+                <CardGrid cards={membershipResults} />
+              ) : (
+                 <div className="py-16 text-center">
+                    <p className="text-lg text-muted-foreground">No {activeMembershipPlanType !== 'all' ? activeMembershipPlanType : ''} memberships found.</p>
+                </div>
+              )}
+            </Tabs>
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );
