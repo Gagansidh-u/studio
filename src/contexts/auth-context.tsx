@@ -2,10 +2,11 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, Auth } from 'firebase/auth';
+import { onAuthStateChanged, User, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, Auth, deleteUser } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
-import { doc, onSnapshot, getDoc, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -15,6 +16,7 @@ interface AuthContextType {
   login: typeof signInWithEmailAndPassword;
   signup: typeof createUserWithEmailAndPassword;
   logout: () => void;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,6 +27,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => { throw new Error('login not implemented'); },
   signup: async () => { throw new Error('signup not implemented'); },
   logout: () => {},
+  deleteAccount: async () => { throw new Error('deleteAccount not implemented'); },
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -33,11 +36,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [walletCoins, setWalletCoins] = useState<number | null>(null);
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Check for wallet and create if it doesn't exist. This handles existing users.
         const walletRef = doc(db, 'wallets', user.uid);
         const walletSnap = await getDoc(walletRef);
         if (!walletSnap.exists()) {
@@ -87,6 +90,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/login');
   };
 
+  const deleteAccount = async () => {
+    if (!user) {
+      toast({ variant: 'destructive', title: 'Error', description: 'No user is logged in.' });
+      throw new Error("No user is logged in.");
+    }
+
+    try {
+      const walletRef = doc(db, 'wallets', user.uid);
+      await deleteDoc(walletRef);
+      await deleteUser(user);
+      toast({ title: 'Account Deleted', description: 'Your account has been permanently deleted.' });
+    } catch (error: any) {
+      console.error("Error deleting account: ", error);
+      let description = "An unexpected error occurred.";
+      if (error.code === 'auth/requires-recent-login') {
+        description = "This is a sensitive operation. Please log out and log back in before trying again.";
+      }
+      toast({
+        variant: 'destructive',
+        title: 'Deletion Failed',
+        description,
+      });
+      throw error;
+    }
+  };
+
   const value: AuthContextType = {
     user,
     loading,
@@ -95,6 +124,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login: (auth: Auth, email: string, p: string) => signInWithEmailAndPassword(auth, email, p),
     signup: (auth: Auth, email: string, p: string) => createUserWithEmailAndPassword(auth, email, p),
     logout,
+    deleteAccount,
   };
 
   return (
