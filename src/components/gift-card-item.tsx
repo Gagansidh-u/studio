@@ -49,6 +49,7 @@ import { SpotifyIcon } from "@/components/icons/spotify-icon";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "./ui/badge";
+import { cn } from "@/lib/utils";
 
 interface GiftCardItemProps {
   card: GiftCardType;
@@ -260,18 +261,27 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
         
         <div className="space-y-6 py-4">
           {isMembership ? (
-            <Tabs defaultValue="monthly" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="monthly" disabled={monthlyPlans.length === 0}>Monthly</TabsTrigger>
-                <TabsTrigger value="annual" disabled={annualPlans.length === 0}>Annual</TabsTrigger>
-              </TabsList>
-              <TabsContent value="monthly" className="mt-4">
-                <PlanSelector plans={monthlyPlans} />
-              </TabsContent>
-              <TabsContent value="annual" className="mt-4">
-                <PlanSelector plans={annualPlans} />
-              </TabsContent>
-            </Tabs>
+            <>
+              {(monthlyPlans.length > 0 && annualPlans.length > 0) ? (
+                <Tabs defaultValue="monthly" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                    <TabsTrigger value="annual">Annual</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="monthly" className="mt-4">
+                    <PlanSelector plans={monthlyPlans} />
+                  </TabsContent>
+                  <TabsContent value="annual" className="mt-4">
+                    <PlanSelector plans={annualPlans} />
+                  </TabsContent>
+                </Tabs>
+              ) : (
+                <>
+                  {monthlyPlans.length > 0 && <PlanSelector plans={monthlyPlans} />}
+                  {annualPlans.length > 0 && <PlanSelector plans={annualPlans} />}
+                </>
+              )}
+            </>
           ) : (
             <div>
               <h3 className="mb-3 text-sm font-medium text-muted-foreground">Select an Amount</h3>
