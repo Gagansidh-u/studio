@@ -5,4 +5,5 @@ export type GiftCardType = {
   value: number;
   imageUrl: string;
   instructions: string;
+  features?: string;
 };
