@@ -4,16 +4,7 @@ import Header from "@/components/header";
 export default function Home() {
   return (
     <div className="relative min-h-screen">
-      <div className="fixed inset-0 z-0 h-full w-full">
-        <iframe
-          src="https://my.spline.design/neoncoloredabstractsh-9e6b4122e23d706a928e4695029a738c/!/embed"
-          frameBorder="0"
-          width="100%"
-          height="100%"
-          className="pointer-events-none"
-        ></iframe>
-         <div className="absolute inset-0 bg-background/80 backdrop-blur-md"></div>
-      </div>
+      <div className="fixed inset-0 z-0 h-full w-full bg-background bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
 
       <div className="relative z-10 flex min-h-screen flex-col">
         <Header />

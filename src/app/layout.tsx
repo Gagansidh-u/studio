@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { AuthProvider } from '@/contexts/auth-context';
 
 export const metadata: Metadata = {
-  title: 'Giftify',
+  title: 'Grock',
   description: 'Purchase gift cards for your favorite platforms.',
 };
 

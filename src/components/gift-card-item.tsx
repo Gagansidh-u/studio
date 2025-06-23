@@ -125,7 +125,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
         key: "rzp_live_YjljJCP3ewIy4d",
         amount: amount * 100, 
         currency: "INR",
-        name: "Giftify",
+        name: "Grock",
         description: `Purchase ${name}`,
         image: "https://placehold.co/128x128.png",
         handler: async function (response: any) {
