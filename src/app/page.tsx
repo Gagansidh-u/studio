@@ -6,13 +6,13 @@ export default function Home() {
     <div className="relative min-h-screen">
       <div className="fixed inset-0 z-0 h-full w-full">
         <iframe
-          src="https://my.spline.design/blueparticles-4e9639c0f7344933a04c107fce20054a/!/embed"
+          src="https://my.spline.design/neoncoloredabstractsh-9e6b4122e23d706a928e4695029a738c/!/embed"
           frameBorder="0"
           width="100%"
           height="100%"
           className="pointer-events-none"
         ></iframe>
-         <div className="absolute inset-0 bg-background/60 backdrop-blur-md"></div>
+         <div className="absolute inset-0 bg-background/80 backdrop-blur-md"></div>
       </div>
 
       <div className="relative z-10 flex min-h-screen flex-col">
@@ -23,7 +23,7 @@ export default function Home() {
               Unlock Your Digital World
             </h1>
             <p className="mt-6 text-lg text-muted-foreground md:text-xl">
-              Instantly buy and send gift cards from the world's top brands.
+              Instantly buy and send gift cards and memberships from the world's top brands.
               The perfect gift, every time.
             </p>
           </div>
