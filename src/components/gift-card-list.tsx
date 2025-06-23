@@ -51,7 +51,7 @@ export default function GiftCardList() {
   );
 
   return (
-    <div className="mt-12 space-y-16">
+    <div className="mt-10 space-y-16">
       <div className="relative mx-auto mb-8 max-w-lg">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input

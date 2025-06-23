@@ -157,6 +157,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
     const coinsToUse = applyCoins ? Math.min(walletCoins, maxCoinsToUse) : 0;
     const discountAmount = Math.floor(coinsToUse / 10);
     const finalAmount = originalAmount - discountAmount;
+    const coinsEarned = Math.floor(finalAmount * 0.1);
     
     if (paymentMethod === 'wallet' && walletBalance < finalAmount) {
          toast({
@@ -186,8 +187,6 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                 throw new Error("Not enough coins. Please try again.");
             }
             
-            const coinsEarned = Math.floor(finalAmount * 0.5);
-            
             const newBalance = paymentMethod === 'wallet' ? currentBalance - finalAmount : currentBalance;
             const newCoins = currentCoins - coinsToUse + coinsEarned;
 
@@ -209,7 +208,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
             });
         });
         
-        toast({ title: "Purchase Successful!", description: `You earned ${Math.floor(finalAmount * 0.5)} coins.` });
+        toast({ title: "Purchase Successful!", description: `You earned ${coinsEarned} coins.` });
         onDialogClose(false);
 
     } catch (error: any) {
@@ -469,6 +468,10 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                     You are buying <span className="font-bold">{purchaseDetails?.name}</span> for <span className="font-bold">₹{purchaseDetails?.amount}</span>.
                 </DialogDescription>
             </DialogHeader>
+
+            <div className="rounded-lg border border-primary/20 bg-primary/10 p-3 text-center text-sm font-medium text-primary">
+                <p>You'll earn <span className="font-bold">1% unlimited cashback</span> in Grock Coins on this purchase!</p>
+            </div>
 
             {coinsToUse > 0 && (
                 <div className="flex items-center justify-between space-x-2 rounded-lg border p-3 my-2">
