@@ -28,7 +28,7 @@ export default function Header() {
           </span>
         </Link>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -55,13 +55,13 @@ export default function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/orders">
-                    <ShoppingBag className="mr-2" />
+                    <ShoppingBag />
                     My Orders
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/wallet">
-                    <Wallet className="mr-2" />
+                    <Wallet />
                     Wallet
                     {walletBalance !== null && (
                       <span className="ml-auto font-mono text-sm">₹{walletBalance.toFixed(2)}</span>
@@ -70,7 +70,7 @@ export default function Header() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
-                  <LogOut className="mr-2" />
+                  <LogOut />
                   Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -80,13 +80,13 @@ export default function Header() {
               <Button asChild variant="ghost">
                 <Link href="/login">
                   <LogIn />
-                  Login
+                  <span className="hidden sm:inline">Login</span>
                 </Link>
               </Button>
               <Button asChild>
                 <Link href="/signup">
                   <UserPlus />
-                  Sign Up
+                  <span className="hidden sm:inline">Sign Up</span>
                 </Link>
               </Button>
             </div>

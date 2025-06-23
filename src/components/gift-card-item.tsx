@@ -412,7 +412,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                         )}
                     />
                     <Button type="submit" className="w-full">
-                         <CreditCard className="mr-2 h-4 w-4" /> Purchase Custom Amount
+                         <CreditCard /> Purchase Custom Amount
                     </Button>
                 </form>
             </Form>
@@ -536,7 +536,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                 >
                     {isProcessing ? 'Processing...' : (
                         <>
-                            <Wallet className="mr-2 h-4 w-4" />
+                            <Wallet />
                             Pay with Wallet (₹{(walletBalance ?? 0).toFixed(2)})
                         </>
                     )}
@@ -544,7 +544,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                 <Button onClick={handleRazorpayPurchase} className="w-full" variant="secondary" disabled={isProcessing}>
                     {isProcessing ? 'Processing...' : (
                         <>
-                            <Landmark className="mr-2 h-4 w-4" />
+                            <Landmark />
                             Pay with Card / UPI
                         </>
                     )}

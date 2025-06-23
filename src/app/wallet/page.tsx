@@ -212,7 +212,7 @@ export default function WalletPage() {
                   <Button type="submit" className="w-full" disabled={isProcessing}>
                     {isProcessing ? 'Processing...' : (
                       <>
-                        <CreditCard className="mr-2 h-4 w-4" /> Add Funds
+                        <CreditCard /> Add Funds
                       </>
                     )}
                   </Button>
