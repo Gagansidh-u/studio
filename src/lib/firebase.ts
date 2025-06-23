@@ -6,12 +6,12 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAZLw5_jDVAi1pzaedX2xDU_1VpG2kUu_Q",
+  authDomain: "grock-a257f.firebaseapp.com",
+  projectId: "grock-a257f",
+  storageBucket: "grock-a257f.appspot.com",
+  messagingSenderId: "105655078519",
+  appId: "1:105655078519:web:53ee16b0805c8651a25126"
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
