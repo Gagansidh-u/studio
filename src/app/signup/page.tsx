@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 import { auth, db } from '@/lib/firebase';
-import { updateProfile } from 'firebase/auth';
+import { updateProfile, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
@@ -55,8 +55,9 @@ export default function SignupPage() {
           userId: userCredential.user.uid,
           email: userCredential.user.email,
         });
+        await sendEmailVerification(userCredential.user);
       }
-      router.push('/');
+      router.push('/verify-email');
     } catch (error: any) {
       setError(error.message);
     }

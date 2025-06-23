@@ -39,8 +39,12 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setError(null);
     try {
-      await login(auth, values.email, values.password);
-      router.push('/');
+      const userCredential = await login(auth, values.email, values.password);
+      if (userCredential.user.emailVerified) {
+        router.push('/');
+      } else {
+        router.push('/verify-email');
+      }
     } catch (error: any) {
       setError(error.message);
     }
