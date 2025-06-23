@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -158,9 +157,9 @@ export default function WalletPage() {
               <CardDescription>Your current wallet balance.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-4xl font-bold">
+              <div className="text-4xl font-bold">
                 {walletBalance !== null ? `₹${walletBalance.toFixed(2)}` : <Skeleton className="h-10 w-40" />}
-              </p>
+              </div>
             </CardContent>
           </Card>
 
