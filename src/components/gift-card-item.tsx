@@ -188,8 +188,8 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
             </div>
           </CardContent>
            <CardFooter className="p-4">
-              <Button variant="outline" className="w-full">
-                View Options
+              <Button className="w-full">
+                Buy Now
               </Button>
             </CardFooter>
         </Card>
