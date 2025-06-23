@@ -31,4 +31,5 @@ export type Wallet = {
   balance: number;
   coins: number;
   userId: string;
+  email?: string;
 };

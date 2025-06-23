@@ -45,6 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             balance: 0,
             coins: 0,
             userId: user.uid,
+            email: user.email,
           });
         }
       }
