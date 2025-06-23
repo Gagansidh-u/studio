@@ -20,7 +20,7 @@ export type Order = {
   amount: number;
   finalAmount?: number;
   purchaseDate: any;
-  status: 'Completed' | 'Pending';
+  status: 'Completed' | 'Pending' | 'Processing';
   paymentId: string;
   paymentMethod: 'razorpay' | 'wallet';
   coinsEarned?: number;

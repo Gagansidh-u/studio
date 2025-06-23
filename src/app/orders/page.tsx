@@ -10,12 +10,25 @@ import type { Order } from '@/lib/types';
 import Header from '@/components/header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Coins } from 'lucide-react';
+
+const getStatusVariant = (status: Order['status']): BadgeProps['variant'] => {
+  switch (status) {
+    case 'Completed':
+      return 'success';
+    case 'Pending':
+      return 'warning';
+    case 'Processing':
+      return 'default'; // 'default' uses primary color (blue)
+    default:
+      return 'secondary';
+  }
+};
 
 export default function OrdersPage() {
   const { user, loading: authLoading } = useAuth();
@@ -118,7 +131,7 @@ export default function OrdersPage() {
                       </TableCell>
                       <TableCell className="capitalize">{order.paymentMethod}</TableCell>
                       <TableCell className="text-right">
-                        <Badge>{order.status}</Badge>
+                        <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
                       </TableCell>
                     </TableRow>
                   ))}
