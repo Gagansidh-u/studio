@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const walletRef = doc(db, 'wallets', user.uid);
       unsubscribeWallet = onSnapshot(walletRef, (doc) => {
         if (doc.exists()) {
-          setWalletBalance(doc.data().balance);
+          setWalletBalance(doc.data().balance ?? 0);
           setWalletCoins(doc.data().coins ?? 0);
         } else {
           setWalletBalance(0);
