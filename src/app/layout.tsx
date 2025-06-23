@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { cn } from '@/lib/utils';
+import { AuthProvider } from '@/contexts/auth-context';
 
 export const metadata: Metadata = {
   title: 'Giftify',
@@ -23,8 +24,10 @@ export default function RootLayout({
         <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
       </head>
       <body className={cn("font-body antialiased")}>
-        {children}
-        <Toaster />
+        <AuthProvider>
+          {children}
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );

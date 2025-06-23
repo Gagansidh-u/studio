@@ -8,9 +8,8 @@ export const giftCards: GiftCardType[] = [
     name: 'Amazon Gift Card',
     value: 100,
     imageUrl: 'https://placehold.co/600x400/ff9900/000000',
-    instructions: `1. Visit www.amazon.in/redeem
-2. Enter the claim code and click "Apply to Your Balance".
-3. The gift card funds will be added to your account.`,
+    instructions: `1. Visit www.amazon.in/redeem\n2. Enter the claim code and click "Apply to Your Balance".\n3. The gift card funds will be added to your account.`,
+    category: 'Gift Card',
   },
   {
     id: '4',
@@ -18,9 +17,8 @@ export const giftCards: GiftCardType[] = [
     name: 'Amazon Gift Card',
     value: 250,
     imageUrl: 'https://placehold.co/600x400/ff9900/000000',
-    instructions: `1. Visit www.amazon.in/redeem
-2. Enter the claim code and click "Apply to Your Balance".
-3. The gift card funds will be added to your account.`,
+    instructions: `1. Visit www.amazon.in/redeem\n2. Enter the claim code and click "Apply to Your Balance".\n3. The gift card funds will be added to your account.`,
+    category: 'Gift Card',
   },
   {
     id: '7',
@@ -28,9 +26,8 @@ export const giftCards: GiftCardType[] = [
     name: 'Amazon Gift Card',
     value: 500,
     imageUrl: 'https://placehold.co/600x400/ff9900/000000',
-    instructions: `1. Visit www.amazon.in/redeem
-2. Enter the claim code and click "Apply to Your Balance".
-3. The gift card funds will be added to your account.`,
+    instructions: `1. Visit www.amazon.in/redeem\n2. Enter the claim code and click "Apply to Your Balance".\n3. The gift card funds will be added to your account.`,
+    category: 'Gift Card',
   },
   {
     id: '13',
@@ -38,9 +35,8 @@ export const giftCards: GiftCardType[] = [
     name: 'Amazon Gift Card',
     value: 1000,
     imageUrl: 'https://placehold.co/600x400/ff9900/000000',
-    instructions: `1. Visit www.amazon.in/redeem
-2. Enter the claim code and click "Apply to Your Balance".
-3. The gift card funds will be added to your account.`,
+    instructions: `1. Visit www.amazon.in/redeem\n2. Enter the claim code and click "Apply to Your Balance".\n3. The gift card funds will be added to your account.`,
+    category: 'Gift Card',
   },
 
   // Steam
@@ -50,9 +46,8 @@ export const giftCards: GiftCardType[] = [
     name: 'Steam Wallet Code',
     value: 250,
     imageUrl: 'https://placehold.co/600x400/1b2838/ffffff',
-    instructions: `1. Go to store.steampowered.com/account/redeemwalletcode
-2. Sign in to your Steam account.
-3. Enter your Wallet Code and click "Continue".`,
+    instructions: `1. Go to store.steampowered.com/account/redeemwalletcode\n2. Sign in to your Steam account.\n3. Enter your Wallet Code and click "Continue".`,
+    category: 'Gift Card',
   },
   {
     id: '5',
@@ -60,9 +55,8 @@ export const giftCards: GiftCardType[] = [
     name: 'Steam Wallet Code',
     value: 500,
     imageUrl: 'https://placehold.co/600x400/1b2838/ffffff',
-    instructions: `1. Go to store.steampowered.com/account/redeemwalletcode
-2. Sign in to your Steam account.
-3. Enter your Wallet Code and click "Continue".`,
+    instructions: `1. Go to store.steampowered.com/account/redeemwalletcode\n2. Sign in to your Steam account.\n3. Enter your Wallet Code and click "Continue".`,
+    category: 'Gift Card',
   },
   {
     id: '8',
@@ -70,9 +64,8 @@ export const giftCards: GiftCardType[] = [
     name: 'Steam Wallet Code',
     value: 1000,
     imageUrl: 'https://placehold.co/600x400/1b2838/ffffff',
-    instructions: `1. Go to store.steampowered.com/account/redeemwalletcode
-2. Sign in to your Steam account.
-3. Enter your Wallet Code and click "Continue".`,
+    instructions: `1. Go to store.steampowered.com/account/redeemwalletcode\n2. Sign in to your Steam account.\n3. Enter your Wallet Code and click "Continue".`,
+    category: 'Gift Card',
   },
   {
     id: '14',
@@ -80,9 +73,8 @@ export const giftCards: GiftCardType[] = [
     name: 'Steam Wallet Code',
     value: 1500,
     imageUrl: 'https://placehold.co/600x400/1b2838/ffffff',
-    instructions: `1. Go to store.steampowered.com/account/redeemwalletcode
-2. Sign in to your Steam account.
-3. Enter your Wallet Code and click "Continue".`,
+    instructions: `1. Go to store.steampowered.com/account/redeemwalletcode\n2. Sign in to your Steam account.\n3. Enter your Wallet Code and click "Continue".`,
+    category: 'Gift Card',
   },
 
   // Google Play
@@ -92,10 +84,8 @@ export const giftCards: GiftCardType[] = [
     name: 'Google Play Gift Code',
     value: 100,
     imageUrl: 'https://placehold.co/600x400/3ddc84/ffffff',
-    instructions: `1. Open the Google Play Store app.
-2. Tap Menu > Redeem.
-3. Enter your code.
-4. Tap "Redeem".`,
+    instructions: `1. Open the Google Play Store app.\n2. Tap Menu > Redeem.\n3. Enter your code.\n4. Tap "Redeem".`,
+    category: 'Gift Card',
   },
   {
     id: '6',
@@ -103,10 +93,8 @@ export const giftCards: GiftCardType[] = [
     name: 'Google Play Gift Code',
     value: 300,
     imageUrl: 'https://placehold.co/600x400/3ddc84/ffffff',
-    instructions: `1. Open the Google Play Store app.
-2. Tap Menu > Redeem.
-3. Enter your code.
-4. Tap "Redeem".`,
+    instructions: `1. Open the Google Play Store app.\n2. Tap Menu > Redeem.\n3. Enter your code.\n4. Tap "Redeem".`,
+    category: 'Gift Card',
   },
   {
     id: '15',
@@ -114,76 +102,99 @@ export const giftCards: GiftCardType[] = [
     name: 'Google Play Gift Code',
     value: 500,
     imageUrl: 'https://placehold.co/600x400/3ddc84/ffffff',
-    instructions: `1. Open the Google Play Store app.
-2. Tap Menu > Redeem.
-3. Enter your code.
-4. Tap "Redeem".`,
+    instructions: `1. Open the Google Play Store app.\n2. Tap Menu > Redeem.\n3. Enter your code.\n4. Tap "Redeem".`,
+    category: 'Gift Card',
   },
   
   // Netflix
   {
     id: '18',
     platform: 'Netflix',
-    name: 'Netflix Mobile Membership',
+    name: 'Mobile Plan',
     value: 149,
     imageUrl: 'https://placehold.co/600x400/e50914/ffffff',
-    features: '480p resolution, watch on 1 phone or tablet.',
     instructions: `1. Go to netflix.com/redeem.\n2. Enter the PIN code.`,
+    category: 'Membership',
+    planType: 'Monthly',
+    features: ['Good video quality (480p)', 'Watch on your phone or tablet', 'Watch on 1 device at a time'],
   },
   {
     id: '9',
     platform: 'Netflix',
-    name: 'Netflix Basic Membership',
+    name: 'Basic Plan',
     value: 199,
     imageUrl: 'https://placehold.co/600x400/e50914/ffffff',
-    features: '720p resolution, watch on 1 device at a time.',
     instructions: `1. Go to netflix.com/redeem.\n2. Enter the PIN code.`,
+    category: 'Membership',
+    planType: 'Monthly',
+    features: ['Good video quality (720p)', 'Watch on your TV, computer, phone or tablet', 'Watch on 1 device at a time'],
   },
   {
     id: '11',
     platform: 'Netflix',
-    name: 'Netflix Standard Membership',
+    name: 'Standard Plan',
     value: 499,
     imageUrl: 'https://placehold.co/600x400/e50914/ffffff',
-    features: '1080p resolution, watch on 2 devices at a time.',
     instructions: `1. Go to netflix.com/redeem.\n2. Enter the PIN code.`,
+    category: 'Membership',
+    planType: 'Monthly',
+    features: ['Great video quality (1080p)', 'Watch on your TV, computer, phone or tablet', 'Watch on 2 devices at a time'],
   },
   {
     id: '16',
     platform: 'Netflix',
-    name: 'Netflix Premium Membership',
+    name: 'Premium Plan',
     value: 649,
     imageUrl: 'https://placehold.co/600x400/e50914/ffffff',
-    features: '4K+HDR resolution, watch on 4 devices at a time.',
     instructions: `1. Go to netflix.com/redeem.\n2. Enter the PIN code.`,
+    category: 'Membership',
+    planType: 'Monthly',
+    features: ['Best video quality (4K+HDR)', 'Watch on your TV, computer, phone or tablet', 'Watch on 4 devices at a time', 'Spatial audio included'],
   },
 
   // Spotify
   {
     id: '10',
     platform: 'Spotify',
-    name: 'Spotify Individual',
+    name: 'Individual Plan',
     value: 129,
     imageUrl: 'https://placehold.co/600x400/1db954/000000',
-    features: '1 Premium account. Ad-free music listening.',
-    instructions: `1. Go to spotify.com/redeem.\n2. Log in or create your Spotify account.\n3. Enter the PIN on the back of the card.`,
+    instructions: `1. Go to spotify.com/redeem.\n2. Log in or create your Spotify account.\n3. Enter the PIN.`,
+    category: 'Membership',
+    planType: 'Monthly',
+    features: ['1 Premium account', 'Ad-free music listening', 'Listen anywhere—even offline', 'On-demand playback'],
+  },
+  {
+    id: '19',
+    platform: 'Spotify',
+    name: 'Individual Plan',
+    value: 1299,
+    imageUrl: 'https://placehold.co/600x400/1db954/000000',
+    instructions: `1. Go to spotify.com/redeem.\n2. Log in or create your Spotify account.\n3. Enter the PIN.`,
+    category: 'Membership',
+    planType: 'Annual',
+    features: ['1 Premium account', '12 months for a one-time payment', 'Ad-free music listening', 'Listen anywhere—even offline', 'On-demand playback'],
   },
   {
     id: '12',
     platform: 'Spotify',
-    name: 'Spotify Duo',
-    value: 149,
+    name: 'Duo Plan',
+    value: 169,
     imageUrl: 'https://placehold.co/600x400/1db954/000000',
-    features: '2 Premium accounts. For couples under one roof.',
-    instructions: `1. Go to spotify.com/redeem.\n2. Log in or create your Spotify account.\n3. Enter the PIN on the back of the card.`,
+    instructions: `1. Go to spotify.com/redeem.\n2. Log in or create your Spotify account.\n3. Enter the PIN.`,
+    category: 'Membership',
+    planType: 'Monthly',
+    features: ['2 Premium accounts', 'For couples who live together', 'Ad-free music listening', 'Listen anywhere—even offline', 'On-demand playback'],
   },
   {
     id: '17',
     platform: 'Spotify',
-    name: 'Spotify Family',
-    value: 179,
+    name: 'Family Plan',
+    value: 199,
     imageUrl: 'https://placehold.co/600x400/1db954/000000',
-    features: 'Up to 6 Premium accounts. For family members under one roof.',
-    instructions: `1. Go to spotify.com/redeem.\n2. Log in or create your Spotify account.\n3. Enter the PIN on the back of the card.`,
+    instructions: `1. Go to spotify.com/redeem.\n2. Log in or create your Spotify account.\n3. Enter the PIN.`,
+    category: 'Membership',
+    planType: 'Monthly',
+    features: ['Up to 6 Premium accounts', 'For family members living together', 'Block explicit music', 'Ad-free music listening', 'Listen anywhere—even offline'],
   },
 ];

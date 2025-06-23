@@ -1,9 +1,22 @@
 export type GiftCardType = {
   id: string;
-  platform: string;
+  platform: 'Amazon' | 'Steam' | 'Google Play' | 'Netflix' | 'Spotify';
   name: string;
   value: number;
   imageUrl: string;
   instructions: string;
-  features?: string;
+  category: 'Gift Card' | 'Membership';
+  planType?: 'Monthly' | 'Annual';
+  features?: string[];
+};
+
+export type Order = {
+  id?: string;
+  userId: string;
+  cardPlatform: string;
+  cardName: string;
+  amount: number;
+  purchaseDate: any;
+  status: 'Completed';
+  paymentId: string;
 };
