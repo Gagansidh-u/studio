@@ -3,12 +3,13 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAZLw5_jDVAi1pzaedX2xDU_1VpG2kUu_Q",
-  authDomain: "grock-a257f.firebaseapp.com",
-  projectId: "grock-a257f",
-  storageBucket: "grock-a257f.appspot.com",
-  messagingSenderId: "105655078519",
-  appId: "1:105655078519:web:53ee16b0805c8651a25126"
+  apiKey: "AIzaSyA8DfQl0to_r2_KdLO7q2GE9dzINXf_qa4",
+  authDomain: "grock-34c5b.firebaseapp.com",
+  projectId: "grock-34c5b",
+  storageBucket: "grock-34c5b.firebasestorage.app",
+  messagingSenderId: "212508574848",
+  appId: "1:212508574848:web:64f5bcdf3491b8c585d265",
+  measurementId: "G-R9FRWQW5WM"
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
