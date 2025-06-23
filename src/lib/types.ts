@@ -8,6 +8,7 @@ export type GiftCardType = {
   category: 'Gift Card' | 'Membership';
   planType?: 'Monthly' | 'Annual';
   features?: string[];
+  popular?: boolean;
 };
 
 export type Order = {

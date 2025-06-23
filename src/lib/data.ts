@@ -139,6 +139,7 @@ export const giftCards: GiftCardType[] = [
     category: 'Membership',
     planType: 'Monthly',
     features: ['Great video quality (1080p)', 'Watch on your TV, computer, phone or tablet', 'Watch on 2 devices at a time'],
+    popular: true,
   },
   {
     id: '16',
@@ -174,6 +175,7 @@ export const giftCards: GiftCardType[] = [
     category: 'Membership',
     planType: 'Monthly',
     features: ['1 Premium account', 'Ad-free music listening', 'Listen anywhere—even offline', 'On-demand playback'],
+    popular: true,
   },
   {
     id: '12',

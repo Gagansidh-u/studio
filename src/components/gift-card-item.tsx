@@ -48,6 +48,7 @@ import { NetflixIcon } from "@/components/icons/netflix-icon";
 import { SpotifyIcon } from "@/components/icons/spotify-icon";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Badge } from "./ui/badge";
 
 interface GiftCardItemProps {
   card: GiftCardType;
@@ -182,7 +183,12 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
           <div className="flex items-center justify-between rounded-lg border bg-card p-3 shadow-sm mb-3">
             <AccordionTrigger className="flex-grow p-0 hover:no-underline">
               <div className="text-left">
-                <h4 className="font-semibold">{pCard.name}</h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-semibold">{pCard.name}</h4>
+                  {pCard.popular && (
+                    <Badge variant="outline" className="text-primary border-primary">Most Popular</Badge>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground mt-1">₹{pCard.value}</p>
               </div>
             </AccordionTrigger>
