@@ -29,8 +29,11 @@ export type Order = {
 };
 
 export type Wallet = {
+  id?: string;
   balance: number;
   coins: number;
   userId: string;
   email?: string;
+  name?: string;
+  creationTime?: any;
 };

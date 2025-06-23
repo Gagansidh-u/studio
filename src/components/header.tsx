@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Gift, LogIn, LogOut, ShoppingBag, User, UserPlus, Wallet, Trash2, AlertCircle } from 'lucide-react';
+import { Gift, LogIn, LogOut, ShoppingBag, User, UserPlus, Wallet, Trash2, AlertCircle, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -28,7 +28,7 @@ import { Label } from './ui/label';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 export default function Header() {
-  const { user, logout, walletBalance, deleteAccount } = useAuth();
+  const { user, logout, walletBalance, deleteAccount, isAdmin } = useAuth();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [password, setPassword] = useState('');
@@ -40,7 +40,6 @@ export default function Header() {
     setError(null);
     try {
       await deleteAccount(password);
-      // Success toast is handled in context, and onAuthStateChanged will handle redirect.
       setIsDeleteDialogOpen(false);
     } catch (err: any) {
       if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
@@ -55,7 +54,6 @@ export default function Header() {
 
   const onOpenChange = (open: boolean) => {
     if (!open) {
-      // Reset state when dialog is closed
       setPassword('');
       setError(null);
       setIsDeleting(false);
@@ -100,6 +98,14 @@ export default function Header() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/dashboard">
+                        <LayoutDashboard />
+                        Admin Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link href="/orders">
                       <ShoppingBag />

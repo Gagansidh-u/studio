@@ -15,12 +15,15 @@ import {
 } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
-import { doc, onSnapshot, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+
+const ADMIN_EMAIL = 'gagansidhu@flash.co';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isAdmin: boolean;
   walletBalance: number | null;
   walletCoins: number | null;
   login: typeof signInWithEmailAndPassword;
@@ -32,6 +35,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  isAdmin: false,
   walletBalance: null,
   walletCoins: null,
   login: async () => { throw new Error('login not implemented'); },
@@ -43,6 +47,7 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [walletCoins, setWalletCoins] = useState<number | null>(null);
   const router = useRouter();
@@ -51,6 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        setIsAdmin(user.email === ADMIN_EMAIL);
         const walletRef = doc(db, 'wallets', user.uid);
         const walletSnap = await getDoc(walletRef);
         if (!walletSnap.exists()) {
@@ -59,8 +65,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             coins: 0,
             userId: user.uid,
             email: user.email,
+            name: user.displayName,
+            creationTime: serverTimestamp(),
           });
         }
+      } else {
+        setIsAdmin(false);
       }
       setUser(user);
       setLoading(false);
@@ -102,7 +112,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const deleteAccount = async (password: string) => {
     if (!user || !user.email) {
-      toast({ variant: 'destructive', title: 'Error', description: 'No user is logged in.' });
       throw new Error("No user is logged in.");
     }
 
@@ -117,7 +126,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({ title: 'Account Deleted', description: 'Your account has been permanently deleted.' });
     } catch (error: any) {
       console.error("Error deleting account: ", error);
-      // Re-throw the error so the calling component can handle UI updates (e.g., stop loading state).
       throw error;
     }
   };
@@ -125,6 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const value: AuthContextType = {
     user,
     loading,
+    isAdmin,
     walletBalance,
     walletCoins,
     login: (auth: Auth, email: string, p: string) => signInWithEmailAndPassword(auth, email, p),

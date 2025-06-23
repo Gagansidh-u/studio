@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 import { auth, db } from '@/lib/firebase';
 import { updateProfile, sendEmailVerification } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,12 +48,14 @@ export default function SignupPage() {
         await updateProfile(userCredential.user, {
           displayName: values.name,
         });
-        // Create a wallet for the new user
+        
         await setDoc(doc(db, "wallets", userCredential.user.uid), {
           balance: 0,
           coins: 0,
           userId: userCredential.user.uid,
           email: userCredential.user.email,
+          name: values.name,
+          creationTime: serverTimestamp(),
         });
         await sendEmailVerification(userCredential.user);
       }
