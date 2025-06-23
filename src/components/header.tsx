@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Gift, LogIn, LogOut, ShoppingBag, User, UserPlus, Wallet, Trash2 } from 'lucide-react';
+import { Gift, LogIn, LogOut, ShoppingBag, User, UserPlus, Wallet, Trash2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -13,35 +13,55 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { Button, buttonVariants } from './ui/button';
+import { Button } from './ui/button';
 import { useState } from 'react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 export default function Header() {
   const { user, logout, walletBalance, deleteAccount } = useAuth();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  const handleDeleteAccount = async () => {
+  const handleDeleteAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsDeleting(true);
+    setError(null);
     try {
-      await deleteAccount();
+      await deleteAccount(password);
+      // Success toast is handled in context, and onAuthStateChanged will handle redirect.
       setIsDeleteDialogOpen(false);
-    } catch (error) {
-      setIsDeleteDialogOpen(false);
+    } catch (err: any) {
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setError("Incorrect password. Please try again.");
+      } else {
+        setError("An unexpected error occurred. Please try again later.");
+      }
     } finally {
       setIsDeleting(false);
     }
   };
+
+  const onOpenChange = (open: boolean) => {
+    if (!open) {
+      // Reset state when dialog is closed
+      setPassword('');
+      setError(null);
+      setIsDeleting(false);
+    }
+    setIsDeleteDialogOpen(open);
+  }
 
 
   return (
@@ -127,27 +147,47 @@ export default function Header() {
         </div>
       </header>
       
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you absolutely sure?</DialogTitle>
+            <DialogDescription>
               This action cannot be undone. This will permanently delete your
-              account and remove your data from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isDeleting}
-              className={buttonVariants({ variant: "destructive" })}
-              onClick={handleDeleteAccount}
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              account. Please enter your password to confirm.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleDeleteAccount} className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={isDeleting}>Cancel</Button>
+              <Button
+                type="submit"
+                variant="destructive"
+                disabled={isDeleting || !password}
+              >
+                {isDeleting ? "Deleting..." : "Delete Account"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

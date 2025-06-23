@@ -2,7 +2,17 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, Auth, deleteUser } from 'firebase/auth';
+import { 
+  onAuthStateChanged, 
+  User, 
+  signOut, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  Auth, 
+  deleteUser,
+  EmailAuthProvider,
+  reauthenticateWithCredential
+} from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { doc, onSnapshot, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
@@ -16,7 +26,7 @@ interface AuthContextType {
   login: typeof signInWithEmailAndPassword;
   signup: typeof createUserWithEmailAndPassword;
   logout: () => void;
-  deleteAccount: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -90,28 +100,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/login');
   };
 
-  const deleteAccount = async () => {
-    if (!user) {
+  const deleteAccount = async (password: string) => {
+    if (!user || !user.email) {
       toast({ variant: 'destructive', title: 'Error', description: 'No user is logged in.' });
       throw new Error("No user is logged in.");
     }
 
     try {
+      const credential = EmailAuthProvider.credential(user.email, password);
+      await reauthenticateWithCredential(user, credential);
+      
       const walletRef = doc(db, 'wallets', user.uid);
       await deleteDoc(walletRef);
       await deleteUser(user);
+
       toast({ title: 'Account Deleted', description: 'Your account has been permanently deleted.' });
     } catch (error: any) {
       console.error("Error deleting account: ", error);
-      let description = "An unexpected error occurred.";
-      if (error.code === 'auth/requires-recent-login') {
-        description = "This is a sensitive operation. Please log out and log back in before trying again.";
-      }
-      toast({
-        variant: 'destructive',
-        title: 'Deletion Failed',
-        description,
-      });
+      // Re-throw the error so the calling component can handle UI updates (e.g., stop loading state).
+      throw error;
     }
   };
 
