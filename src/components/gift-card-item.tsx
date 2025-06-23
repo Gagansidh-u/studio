@@ -27,6 +27,8 @@ import { Badge } from "@/components/ui/badge";
 import { AmazonIcon } from "@/components/icons/amazon-icon";
 import { GooglePlayIcon } from "@/components/icons/google-play-icon";
 import { SteamIcon } from "@/components/icons/steam-icon";
+import { NetflixIcon } from "@/components/icons/netflix-icon";
+import { SpotifyIcon } from "@/components/icons/spotify-icon";
 
 interface GiftCardItemProps {
   card: GiftCardType;
@@ -36,6 +38,8 @@ const platformIcons: Record<string, React.ReactNode> = {
     'Amazon': <AmazonIcon className="h-6 w-6 text-foreground" />,
     'Steam': <SteamIcon className="h-6 w-6 text-foreground" />,
     'Google Play': <GooglePlayIcon className="h-6 w-6 text-foreground" />,
+    'Netflix': <NetflixIcon className="h-6 w-6 text-foreground" />,
+    'Spotify': <SpotifyIcon className="h-6 w-6 text-foreground" />,
 };
 
 declare global {
@@ -46,6 +50,7 @@ declare global {
 
 export default function GiftCardItem({ card }: GiftCardItemProps) {
   const { toast } = useToast();
+  const aiHint = `${card.platform.toLowerCase().replace(' ', '')} card`;
 
   const handlePurchase = () => {
     const options = {
@@ -113,7 +118,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                 alt={card.name}
                 fill
                 className="object-cover"
-                data-ai-hint="gift card"
+                data-ai-hint={aiHint}
               />
             </div>
           </CardContent>
@@ -151,7 +156,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                     alt={card.name}
                     fill
                     className="object-cover"
-                    data-ai-hint="gaming currency"
+                    data-ai-hint={aiHint}
                   />
             </div>
             <div>
