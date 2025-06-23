@@ -165,7 +165,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
     const coinsToUse = applyCoins ? Math.min(walletCoins, maxCoinsToUse) : 0;
     const discountAmount = Math.floor(coinsToUse / 10);
     const finalAmount = originalAmount - discountAmount;
-    const coinsEarned = Math.floor(finalAmount * 0.1);
+    const coinsEarned = Math.floor(finalAmount * 0.01);
     
     if (paymentMethod === 'wallet' && walletBalance < finalAmount) {
          toast({
@@ -208,7 +208,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                 amount: originalAmount,
                 finalAmount: finalAmount,
                 purchaseDate: serverTimestamp(),
-                status: 'Completed',
+                status: 'Pending',
                 paymentId: paymentId,
                 paymentMethod: paymentMethod,
                 coinsUsed: coinsToUse,
