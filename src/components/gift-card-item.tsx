@@ -98,7 +98,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      customAmount: undefined,
+      customAmount: "" as any,
     },
   });
   
