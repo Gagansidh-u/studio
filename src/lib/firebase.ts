@@ -1,6 +1,3 @@
-// IMPORTANT: Replace the placeholder values with your actual Firebase project configuration.
-// You can find this in your Firebase project settings.
-
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
