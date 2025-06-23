@@ -14,7 +14,7 @@ export default function Home() {
         <main className="container mx-auto flex-1 px-4 py-8 md:px-6 lg:py-12">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="font-headline text-4xl font-bold tracking-tight bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent sm:text-5xl md:text-6xl">
-              Unlock Your Digital World
+              Buy Gift Cards & Memberships Instantly
             </h1>
             <p className="mt-6 text-lg text-muted-foreground md:text-xl">
               Instantly buy and send gift cards and memberships from the world's top brands.
