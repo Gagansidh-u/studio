@@ -112,7 +112,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: 'Deletion Failed',
         description,
       });
-      throw error;
     }
   };
 
