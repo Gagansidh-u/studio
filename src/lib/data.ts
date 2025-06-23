@@ -1,3 +1,4 @@
+
 import type { GiftCardType } from './types';
 
 export const giftCards: GiftCardType[] = [
@@ -37,6 +38,41 @@ export const giftCards: GiftCardType[] = [
     imageUrl: 'https://placehold.co/600x400/ff9900/000000',
     instructions: `1. Visit www.amazon.in/redeem\n2. Enter the claim code and click "Apply to Your Balance".\n3. The gift card funds will be added to your account.`,
     category: 'Gift Card',
+  },
+  // Amazon Prime Membership
+  {
+    id: '21',
+    platform: 'Amazon',
+    name: 'Prime Monthly',
+    value: 299,
+    imageUrl: 'https://placehold.co/600x400/00a8e1/ffffff',
+    instructions: `1. Visit amazon.in/prime.\n2. Sign in to your Amazon account.\n3. Choose your plan and proceed to payment.`,
+    category: 'Membership',
+    planType: 'Monthly',
+    features: ['Free One-Day/Two-Day delivery', 'Prime Video: Unlimited movies & TV shows', 'Prime Music: Ad-free music', 'Prime Reading: Free eBooks', 'Exclusive deals and early access'],
+    popular: true,
+  },
+  {
+    id: '22',
+    platform: 'Amazon',
+    name: 'Prime Annual',
+    value: 1499,
+    imageUrl: 'https://placehold.co/600x400/00a8e1/ffffff',
+    instructions: `1. Visit amazon.in/prime.\n2. Sign in to your Amazon account.\n3. Choose your plan and proceed to payment.`,
+    category: 'Membership',
+    planType: 'Annual',
+    features: ['All monthly benefits for a full year', 'Significant savings over monthly plan'],
+  },
+  {
+    id: '23',
+    platform: 'Amazon',
+    name: 'Prime Lite Annual',
+    value: 799,
+    imageUrl: 'https://placehold.co/600x400/00a8e1/ffffff',
+    instructions: `1. Visit amazon.in/prime.\n2. Sign in to your Amazon account.\n3. Choose your plan and proceed to payment.`,
+    category: 'Membership',
+    planType: 'Annual',
+    features: ['Free Two-Day delivery', 'Prime Video with ads on 2 devices'],
   },
 
   // Steam
