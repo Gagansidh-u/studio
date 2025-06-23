@@ -18,13 +18,17 @@ export type Order = {
   cardPlatform: string;
   cardName: string;
   amount: number;
+  finalAmount?: number;
   purchaseDate: any;
   status: 'Completed';
   paymentId: string;
   paymentMethod: 'razorpay' | 'wallet';
+  coinsEarned?: number;
+  coinsUsed?: number;
 };
 
 export type Wallet = {
   balance: number;
+  coins: number;
   userId: string;
 };

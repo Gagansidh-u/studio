@@ -11,6 +11,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   walletBalance: number | null;
+  walletCoins: number | null;
   login: typeof signInWithEmailAndPassword;
   signup: typeof createUserWithEmailAndPassword;
   logout: () => void;
@@ -20,6 +21,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   walletBalance: null,
+  walletCoins: null,
   login: async () => { throw new Error('login not implemented'); },
   signup: async () => { throw new Error('signup not implemented'); },
   logout: () => {},
@@ -29,6 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [walletCoins, setWalletCoins] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -48,12 +51,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       unsubscribeWallet = onSnapshot(walletRef, (doc) => {
         if (doc.exists()) {
           setWalletBalance(doc.data().balance);
+          setWalletCoins(doc.data().coins ?? 0);
         } else {
           setWalletBalance(0);
+          setWalletCoins(0);
         }
       });
     } else {
       setWalletBalance(null);
+      setWalletCoins(null);
     }
 
     return () => {
@@ -72,6 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     user,
     loading,
     walletBalance,
+    walletCoins,
     login: (auth: Auth, email: string, p: string) => signInWithEmailAndPassword(auth, email, p),
     signup: (auth: Auth, email: string, p: string) => createUserWithEmailAndPassword(auth, email, p),
     logout,

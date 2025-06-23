@@ -1,5 +1,7 @@
+
 import GiftCardList from "@/components/gift-card-list";
 import Header from "@/components/header";
+import WalletSummary from "@/components/wallet-summary";
 
 export default function Home() {
   return (
@@ -21,6 +23,7 @@ export default function Home() {
 
           <GiftCardList />
         </main>
+        <WalletSummary />
       </div>
     </div>
   );

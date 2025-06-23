@@ -51,6 +51,7 @@ export default function SignupPage() {
         // Create a wallet for the new user
         await setDoc(doc(db, "wallets", userCredential.user.uid), {
           balance: 0,
+          coins: 0,
           userId: userCredential.user.uid,
         });
       }

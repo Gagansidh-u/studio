@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import Header from '@/components/header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard } from 'lucide-react';
+import { CreditCard, Coins } from 'lucide-react';
 
 const formSchema = z.object({
   amount: z.coerce
@@ -33,7 +33,7 @@ declare global {
 }
 
 export default function WalletPage() {
-  const { user, loading: authLoading, walletBalance } = useAuth();
+  const { user, loading: authLoading, walletBalance, walletCoins } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -41,7 +41,7 @@ export default function WalletPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      amount: "" as any,
+      amount: '',
     },
   });
 
@@ -66,7 +66,7 @@ export default function WalletPage() {
           await runTransaction(db, async (transaction) => {
             const walletDoc = await transaction.get(walletRef);
             if (!walletDoc.exists()) {
-              transaction.set(walletRef, { balance: amount, userId: user.uid });
+              transaction.set(walletRef, { balance: amount, coins: 0, userId: user.uid });
             } else {
               const newBalance = walletDoc.data().balance + amount;
               transaction.update(walletRef, { balance: newBalance });
@@ -140,6 +140,7 @@ export default function WalletPage() {
         <main className="container mx-auto flex-1 px-4 py-8 md:px-6 lg:py-12">
             <div className="space-y-4 max-w-md mx-auto">
                 <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
                 <Skeleton className="h-48 w-full" />
             </div>
         </main>
@@ -160,6 +161,26 @@ export default function WalletPage() {
             <CardContent>
               <div className="text-4xl font-bold">
                 {walletBalance !== null ? `₹${walletBalance.toFixed(2)}` : <Skeleton className="h-10 w-40" />}
+              </div>
+            </CardContent>
+          </Card>
+
+           <Card>
+            <CardHeader>
+              <CardTitle>My Grock Coins</CardTitle>
+              <CardDescription>Your current coin balance and its value.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-baseline justify-between">
+              <div className="text-4xl font-bold flex items-center gap-2">
+                {walletCoins !== null ? (
+                    <>
+                        <Coins className="h-8 w-8 text-yellow-400" />
+                        {walletCoins.toLocaleString()}
+                    </>
+                ) : <Skeleton className="h-10 w-40" />}
+              </div>
+              <div className="text-lg text-muted-foreground">
+                {walletCoins !== null ? `(≈ ₹${(walletCoins / 10).toFixed(2)})` : <Skeleton className="h-6 w-20" />}
               </div>
             </CardContent>
           </Card>

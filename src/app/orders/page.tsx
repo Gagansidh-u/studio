@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { Coins } from 'lucide-react';
 
 export default function OrdersPage() {
   const { user, loading: authLoading } = useAuth();
@@ -91,8 +92,9 @@ export default function OrdersPage() {
                     <TableHead>Date</TableHead>
                     <TableHead>Product</TableHead>
                     <TableHead>Amount</TableHead>
-                    <TableHead>Payment Method</TableHead>
-                    <TableHead>Payment ID</TableHead>
+                    <TableHead>Coins Used</TableHead>
+                    <TableHead>Coins Earned</TableHead>
+                    <TableHead>Payment</TableHead>
                     <TableHead className="text-right">Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -105,9 +107,14 @@ export default function OrdersPage() {
                           : 'N/A'}
                       </TableCell>
                       <TableCell className="font-medium">{order.cardName}</TableCell>
-                      <TableCell>₹{order.amount}</TableCell>
+                      <TableCell>₹{order.finalAmount ?? order.amount}</TableCell>
+                      <TableCell className="flex items-center gap-1">
+                        {order.coinsUsed ? <><Coins className="h-4 w-4 text-yellow-400" /> {order.coinsUsed}</> : '-'}
+                      </TableCell>
+                       <TableCell className="flex items-center gap-1">
+                        {order.coinsEarned ? <><Coins className="h-4 w-4 text-yellow-400" /> {order.coinsEarned}</> : '-'}
+                      </TableCell>
                       <TableCell className="capitalize">{order.paymentMethod}</TableCell>
-                      <TableCell className="truncate max-w-[100px]">{order.paymentId.startsWith('pay_') ? order.paymentId : '-'}</TableCell>
                       <TableCell className="text-right">
                         <Badge>{order.status}</Badge>
                       </TableCell>

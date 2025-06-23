@@ -50,6 +50,8 @@ import { SpotifyIcon } from "@/components/icons/spotify-icon";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "./ui/badge";
+import { Switch } from "./ui/switch";
+import { Label } from "./ui/label";
 
 interface GiftCardItemProps {
   card: GiftCardType;
@@ -80,10 +82,11 @@ declare global {
 
 export default function GiftCardItem({ card }: GiftCardItemProps) {
   const { toast } = useToast();
-  const { user, walletBalance } = useAuth();
+  const { user, walletBalance, walletCoins } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [purchaseDetails, setPurchaseDetails] = useState<{name: string; amount: number} | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [applyCoins, setApplyCoins] = useState(false);
 
   const allPlatformCards = giftCards.filter(c => c.platform === card.platform);
   const membershipPlans = allPlatformCards.filter(c => c.category === 'Membership');
@@ -98,7 +101,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      customAmount: "" as any,
+      customAmount: "",
     },
   });
   
@@ -139,102 +142,113 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
       form.reset();
       setPurchaseDetails(null);
       setIsProcessing(false);
+      setApplyCoins(false);
     }
   };
 
-  const handleWalletPurchase = async () => {
-    if (!user || !purchaseDetails || walletBalance === null) return;
-    
+  const processPurchase = async (paymentMethod: 'wallet' | 'razorpay', paymentId: string) => {
+    if (!user || !purchaseDetails || walletCoins === null || walletBalance === null) return;
     setIsProcessing(true);
+
+    const { amount: originalAmount, name } = purchaseDetails;
+
+    const maxDiscountInRupees = originalAmount * 0.01;
+    const maxCoinsToUse = Math.floor(maxDiscountInRupees * 10);
+    const coinsToUse = applyCoins ? Math.min(walletCoins, maxCoinsToUse) : 0;
+    const discountAmount = Math.floor(coinsToUse / 10);
+    const finalAmount = originalAmount - discountAmount;
     
-    if (walletBalance < purchaseDetails.amount) {
-      toast({
-        variant: "destructive",
-        title: "Insufficient Balance",
-        description: `Your wallet balance is ₹${walletBalance.toFixed(2)}. Please add funds or use another payment method.`,
-      });
-      setIsProcessing(false);
-      return;
+    if (paymentMethod === 'wallet' && walletBalance < finalAmount) {
+         toast({
+            variant: "destructive",
+            title: "Insufficient Wallet Balance",
+            description: `Your balance is ₹${walletBalance.toFixed(2)}, but ₹${finalAmount.toFixed(2)} is required.`,
+         });
+         setIsProcessing(false);
+         return;
     }
-    
+
     try {
-      const walletRef = doc(db, "wallets", user.uid);
-      const orderCollectionRef = collection(db, "orders");
-      
-      await runTransaction(db, async (transaction) => {
-        const walletDoc = await transaction.get(walletRef);
-        if (!walletDoc.exists() || walletDoc.data().balance < purchaseDetails.amount) {
-          throw new Error("Insufficient funds.");
-        }
+        const walletRef = doc(db, "wallets", user.uid);
+        const orderCollectionRef = collection(db, "orders");
         
-        const newBalance = walletDoc.data().balance - purchaseDetails.amount;
-        transaction.update(walletRef, { balance: newBalance });
-        
-        const newOrderRef = doc(orderCollectionRef);
-        transaction.set(newOrderRef, {
-          userId: user.uid,
-          cardPlatform: card.platform,
-          cardName: purchaseDetails.name,
-          amount: purchaseDetails.amount,
-          purchaseDate: serverTimestamp(),
-          status: 'Completed',
-          paymentId: `wallet_${Date.now()}`,
-          paymentMethod: 'wallet',
+        await runTransaction(db, async (transaction) => {
+            const walletDoc = await transaction.get(walletRef);
+            if (!walletDoc.exists()) throw new Error("Wallet not found.");
+
+            const currentBalance = walletDoc.data().balance;
+            const currentCoins = walletDoc.data().coins;
+
+            if (paymentMethod === 'wallet' && currentBalance < finalAmount) {
+                throw new Error("Insufficient funds. Please try again.");
+            }
+            if (applyCoins && currentCoins < coinsToUse) {
+                throw new Error("Not enough coins. Please try again.");
+            }
+            
+            const coinsEarned = Math.floor(finalAmount * 0.5);
+            
+            const newBalance = paymentMethod === 'wallet' ? currentBalance - finalAmount : currentBalance;
+            const newCoins = currentCoins - coinsToUse + coinsEarned;
+
+            transaction.update(walletRef, { balance: newBalance, coins: newCoins });
+            
+            const newOrderRef = doc(orderCollectionRef);
+            transaction.set(newOrderRef, {
+                userId: user.uid,
+                cardPlatform: card.platform,
+                cardName: name,
+                amount: originalAmount,
+                finalAmount: finalAmount,
+                purchaseDate: serverTimestamp(),
+                status: 'Completed',
+                paymentId: paymentId,
+                paymentMethod: paymentMethod,
+                coinsUsed: coinsToUse,
+                coinsEarned: coinsEarned
+            });
         });
-      });
-      
-      toast({
-        title: "Purchase Successful!",
-        description: `Paid ₹${purchaseDetails.amount.toFixed(2)} from your wallet.`,
-      });
-      onDialogClose(false);
-      
+        
+        toast({ title: "Purchase Successful!", description: `You earned ${Math.floor(finalAmount * 0.5)} coins.` });
+        onDialogClose(false);
+
     } catch (error: any) {
-      console.error("Wallet purchase failed: ", error);
-      toast({
-        variant: 'destructive',
-        title: "Purchase Failed",
-        description: error.message || "An unexpected error occurred.",
-      });
+        console.error("Purchase failed: ", error);
+        toast({
+            variant: 'destructive',
+            title: "Purchase Failed",
+            description: error.message || "An unexpected error occurred.",
+        });
     } finally {
-      setIsProcessing(false);
+        setIsProcessing(false);
     }
   };
 
+  const handleWalletPurchase = () => {
+    processPurchase('wallet', `wallet_${Date.now()}`);
+  }
+  
   const handleRazorpayPurchase = async () => {
-    if (!user || !purchaseDetails) return;
+    if (!user || !purchaseDetails || walletCoins === null) return;
     
     setIsProcessing(true);
-    const { amount, name } = purchaseDetails;
+    const { amount: originalAmount, name } = purchaseDetails;
+
+    const maxDiscountInRupees = originalAmount * 0.01;
+    const maxCoinsToUse = Math.floor(maxDiscountInRupees * 10);
+    const coinsToUse = applyCoins ? Math.min(walletCoins, maxCoinsToUse) : 0;
+    const discountAmount = Math.floor(coinsToUse / 10);
+    const finalAmount = originalAmount - discountAmount;
 
     const options = {
         key: "rzp_live_YjljJCP3ewIy4d",
-        amount: amount * 100, 
+        amount: finalAmount * 100, 
         currency: "INR",
         name: "Grock",
         description: `Purchase ${name}`,
         image: "https://placehold.co/128x128.png",
         handler: async function (response: any) {
-            toast({
-                title: "Payment Successful!",
-                description: `Payment ID: ${response.razorpay_payment_id}. Your gift card details will be sent to your email.`,
-            });
-            
-            try {
-              await addDoc(collection(db, "orders"), {
-                userId: user.uid,
-                cardPlatform: card.platform,
-                cardName: name,
-                amount: amount,
-                purchaseDate: serverTimestamp(),
-                status: 'Completed',
-                paymentId: response.razorpay_payment_id,
-                paymentMethod: 'razorpay',
-              });
-            } catch (error) {
-              console.error("Error writing document: ", error);
-            }
-            onDialogClose(false);
+            await processPurchase('razorpay', response.razorpay_payment_id);
         },
         modal: {
             ondismiss: function() {
@@ -248,7 +262,9 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
         },
         notes: {
             card_platform: card.platform,
-            amount: amount,
+            original_amount: originalAmount,
+            final_amount: finalAmount,
+            coins_used: coinsToUse,
         },
         theme: {
             color: "#29abe2"
@@ -436,48 +452,78 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
     </>
   );
 
-  const PaymentSelectionContent = (
-    <div className="space-y-4 text-center">
-        <DialogHeader>
-            <DialogTitle>Confirm Purchase</DialogTitle>
-            <DialogDescription>
-                You are about to buy <span className="font-bold">{purchaseDetails?.name}</span> for <span className="font-bold">₹{purchaseDetails?.amount}</span>.
-            </DialogDescription>
-        </DialogHeader>
+  const PaymentSelectionContent = () => {
+    const purchaseAmount = purchaseDetails?.amount ?? 0;
+    const maxDiscountInRupees = purchaseAmount * 0.01;
+    const maxCoinsToUse = Math.floor(maxDiscountInRupees * 10);
+    const availableCoins = walletCoins ?? 0;
+    const coinsToUse = Math.min(availableCoins, maxCoinsToUse);
+    const discountFromCoins = applyCoins ? Math.floor(coinsToUse / 10) : 0;
+    const finalAmount = purchaseAmount - discountFromCoins;
 
-        <div className="space-y-3 pt-4">
-             <Button 
-                onClick={handleWalletPurchase} 
-                className="w-full"
-                disabled={isProcessing || walletBalance === null || walletBalance < (purchaseDetails?.amount ?? Infinity)}
-            >
-                {isProcessing ? (
-                    'Processing...'
-                 ) : (
-                    <>
-                        <Wallet className="mr-2 h-4 w-4" />
-                        Pay with Wallet (Balance: ₹{(walletBalance ?? 0).toFixed(2)})
-                    </>
-                )}
-            </Button>
-            <Button onClick={handleRazorpayPurchase} className="w-full" variant="secondary" disabled={isProcessing}>
-                 {isProcessing ? 'Processing...' : (
-                    <>
-                        <Landmark className="mr-2 h-4 w-4" />
-                        Pay with Card / UPI
-                    </>
-                 )}
-            </Button>
+    return (
+        <div className="space-y-4">
+            <DialogHeader className="text-center">
+                <DialogTitle>Confirm Purchase</DialogTitle>
+                <DialogDescription>
+                    You are buying <span className="font-bold">{purchaseDetails?.name}</span> for <span className="font-bold">₹{purchaseDetails?.amount}</span>.
+                </DialogDescription>
+            </DialogHeader>
+
+            {coinsToUse > 0 && (
+                <div className="flex items-center justify-between space-x-2 rounded-lg border p-3 my-2">
+                    <div className="flex flex-col">
+                        <Label htmlFor="apply-coins" className="cursor-pointer">Apply Coins</Label>
+                        <span className="text-xs text-muted-foreground">
+                            Use {coinsToUse} coins for a ₹{Math.floor(coinsToUse / 10)} discount.
+                        </span>
+                    </div>
+                    <Switch
+                        id="apply-coins"
+                        checked={applyCoins}
+                        onCheckedChange={setApplyCoins}
+                        disabled={isProcessing}
+                    />
+                </div>
+            )}
+            
+            {applyCoins && discountFromCoins > 0 && (
+                <div className="text-center text-lg font-semibold text-primary">
+                    Final Price: ₹{finalAmount.toFixed(2)}
+                </div>
+            )}
+
+            <div className="space-y-3 pt-2">
+                <Button 
+                    onClick={handleWalletPurchase} 
+                    className="w-full"
+                    disabled={isProcessing || walletBalance === null || walletBalance < finalAmount}
+                >
+                    {isProcessing ? 'Processing...' : (
+                        <>
+                            <Wallet className="mr-2 h-4 w-4" />
+                            Pay with Wallet (₹{(walletBalance ?? 0).toFixed(2)})
+                        </>
+                    )}
+                </Button>
+                <Button onClick={handleRazorpayPurchase} className="w-full" variant="secondary" disabled={isProcessing}>
+                    {isProcessing ? 'Processing...' : (
+                        <>
+                            <Landmark className="mr-2 h-4 w-4" />
+                            Pay with Card / UPI
+                        </>
+                    )}
+                </Button>
+            </div>
+
+            <DialogFooter className="pt-2 sm:justify-center">
+                <Button variant="ghost" onClick={() => setPurchaseDetails(null)} disabled={isProcessing}>
+                    Back
+                </Button>
+            </DialogFooter>
         </div>
-
-        <DialogFooter className="pt-4 sm:justify-center">
-            <Button variant="ghost" onClick={() => setPurchaseDetails(null)} disabled={isProcessing}>
-                Back
-            </Button>
-        </DialogFooter>
-    </div>
-  );
-
+    );
+  }
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={onDialogClose}>
@@ -509,7 +555,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
         </Card>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
-        {purchaseDetails ? PaymentSelectionContent : PurchaseOptionsContent}
+        {purchaseDetails ? <PaymentSelectionContent /> : PurchaseOptionsContent}
       </DialogContent>
     </Dialog>
   );
