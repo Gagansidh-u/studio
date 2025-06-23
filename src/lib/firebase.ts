@@ -3,6 +3,12 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
+// IMPORTANT: For Google Sign-In to work, you must add your
+// development domain (e.g., localhost) to the list of authorized domains
+// in your Firebase project settings. You can find this in the
+// Firebase Console under Authentication > Settings > Authorized domains.
+// The 'auth/unauthorized-domain' error occurs if the domain is not listed.
+
 const firebaseConfig = {
   apiKey: "AIzaSyA8DfQl0to_r2_KdLO7q2GE9dzINXf_qa4",
   authDomain: "grock-34c5b.firebaseapp.com",
