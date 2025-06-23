@@ -9,7 +9,12 @@ import { Search } from "lucide-react";
 export default function GiftCardList() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredGiftCards = giftCards.filter(
+  const uniqueGiftCardsByPlatform = giftCards.filter(
+    (card, index, self) =>
+      index === self.findIndex((c) => c.platform === card.platform)
+  );
+
+  const filteredGiftCards = uniqueGiftCardsByPlatform.filter(
     (card) =>
       card.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       card.platform.toLowerCase().includes(searchQuery.toLowerCase())
