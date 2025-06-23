@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -7,8 +8,9 @@ import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,6 +47,11 @@ export default function SignupPage() {
       if (userCredential.user) {
         await updateProfile(userCredential.user, {
           displayName: values.name,
+        });
+        // Create a wallet for the new user
+        await setDoc(doc(db, "wallets", userCredential.user.uid), {
+          balance: 0,
+          userId: userCredential.user.uid,
         });
       }
       router.push('/');

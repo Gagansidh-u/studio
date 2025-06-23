@@ -1,3 +1,4 @@
+
 export type GiftCardType = {
   id: string;
   platform: 'Amazon' | 'Amazon Prime' | 'Steam' | 'Google Play' | 'Netflix' | 'Spotify';
@@ -20,4 +21,10 @@ export type Order = {
   purchaseDate: any;
   status: 'Completed';
   paymentId: string;
+  paymentMethod: 'razorpay' | 'wallet';
+};
+
+export type Wallet = {
+  balance: number;
+  userId: string;
 };

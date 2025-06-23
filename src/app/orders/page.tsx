@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -12,6 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function OrdersPage() {
   const { user, loading: authLoading } = useAuth();
@@ -88,6 +91,7 @@ export default function OrdersPage() {
                     <TableHead>Date</TableHead>
                     <TableHead>Product</TableHead>
                     <TableHead>Amount</TableHead>
+                    <TableHead>Payment Method</TableHead>
                     <TableHead>Payment ID</TableHead>
                     <TableHead className="text-right">Status</TableHead>
                   </TableRow>
@@ -102,7 +106,8 @@ export default function OrdersPage() {
                       </TableCell>
                       <TableCell className="font-medium">{order.cardName}</TableCell>
                       <TableCell>₹{order.amount}</TableCell>
-                      <TableCell className="truncate max-w-[100px]">{order.paymentId}</TableCell>
+                      <TableCell className="capitalize">{order.paymentMethod}</TableCell>
+                      <TableCell className="truncate max-w-[100px]">{order.paymentId.startsWith('pay_') ? order.paymentId : '-'}</TableCell>
                       <TableCell className="text-right">
                         <Badge>{order.status}</Badge>
                       </TableCell>

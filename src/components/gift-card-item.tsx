@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore"; 
+import { collection, addDoc, serverTimestamp, runTransaction, doc } from "firebase/firestore"; 
 
 import type { GiftCardType } from "@/lib/types";
 import { giftCards } from "@/lib/data";
@@ -40,7 +40,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
-import { CheckCircle, CreditCard, Info } from "lucide-react";
+import { CheckCircle, CreditCard, Info, Wallet, Landmark } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AmazonIcon } from "@/components/icons/amazon-icon";
 import { GooglePlayIcon } from "@/components/icons/google-play-icon";
@@ -80,9 +80,11 @@ declare global {
 
 export default function GiftCardItem({ card }: GiftCardItemProps) {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, walletBalance } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
+  const [purchaseDetails, setPurchaseDetails] = useState<{name: string; amount: number} | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const allPlatformCards = giftCards.filter(c => c.platform === card.platform);
   const membershipPlans = allPlatformCards.filter(c => c.category === 'Membership');
   const giftCardOptions = allPlatformCards.filter(c => c.category === 'Gift Card');
@@ -118,9 +120,93 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
     dialogDescription = 'Choose a value or enter a custom amount.';
   }
 
+  const beginPurchase = (amount: number, name: string) => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Not Logged In",
+        description: "You need to be logged in to make a purchase.",
+      });
+      setIsDialogOpen(false);
+      return;
+    }
+    setPurchaseDetails({ amount, name });
+  };
 
-  const handlePurchase = async (amount: number, name: string) => {
-    if (amount <= 0) return;
+  const onDialogClose = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      form.reset();
+      setPurchaseDetails(null);
+      setIsProcessing(false);
+    }
+  };
+
+  const handleWalletPurchase = async () => {
+    if (!user || !purchaseDetails || walletBalance === null) return;
+    
+    setIsProcessing(true);
+    
+    if (walletBalance < purchaseDetails.amount) {
+      toast({
+        variant: "destructive",
+        title: "Insufficient Balance",
+        description: `Your wallet balance is ₹${walletBalance.toFixed(2)}. Please add funds or use another payment method.`,
+      });
+      setIsProcessing(false);
+      return;
+    }
+    
+    try {
+      const walletRef = doc(db, "wallets", user.uid);
+      const orderCollectionRef = collection(db, "orders");
+      
+      await runTransaction(db, async (transaction) => {
+        const walletDoc = await transaction.get(walletRef);
+        if (!walletDoc.exists() || walletDoc.data().balance < purchaseDetails.amount) {
+          throw new Error("Insufficient funds.");
+        }
+        
+        const newBalance = walletDoc.data().balance - purchaseDetails.amount;
+        transaction.update(walletRef, { balance: newBalance });
+        
+        const newOrderRef = doc(orderCollectionRef);
+        transaction.set(newOrderRef, {
+          userId: user.uid,
+          cardPlatform: card.platform,
+          cardName: purchaseDetails.name,
+          amount: purchaseDetails.amount,
+          purchaseDate: serverTimestamp(),
+          status: 'Completed',
+          paymentId: `wallet_${Date.now()}`,
+          paymentMethod: 'wallet',
+        });
+      });
+      
+      toast({
+        title: "Purchase Successful!",
+        description: `Paid ₹${purchaseDetails.amount.toFixed(2)} from your wallet.`,
+      });
+      onDialogClose(false);
+      
+    } catch (error: any) {
+      console.error("Wallet purchase failed: ", error);
+      toast({
+        variant: 'destructive',
+        title: "Purchase Failed",
+        description: error.message || "An unexpected error occurred.",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleRazorpayPurchase = async () => {
+    if (!user || !purchaseDetails) return;
+    
+    setIsProcessing(true);
+    const { amount, name } = purchaseDetails;
+
     const options = {
         key: "rzp_live_YjljJCP3ewIy4d",
         amount: amount * 100, 
@@ -134,33 +220,30 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                 description: `Payment ID: ${response.razorpay_payment_id}. Your gift card details will be sent to your email.`,
             });
             
-            if (user) {
-              try {
-                await addDoc(collection(db, "orders"), {
-                  userId: user.uid,
-                  cardPlatform: card.platform,
-                  cardName: name,
-                  amount: amount,
-                  purchaseDate: serverTimestamp(),
-                  status: 'Completed',
-                  paymentId: response.razorpay_payment_id,
-                });
-              } catch (error) {
-                console.error("Error writing document: ", error);
-              }
+            try {
+              await addDoc(collection(db, "orders"), {
+                userId: user.uid,
+                cardPlatform: card.platform,
+                cardName: name,
+                amount: amount,
+                purchaseDate: serverTimestamp(),
+                status: 'Completed',
+                paymentId: response.razorpay_payment_id,
+                paymentMethod: 'razorpay',
+              });
+            } catch (error) {
+              console.error("Error writing document: ", error);
             }
-
-            setIsDialogOpen(false);
-            form.reset();
+            onDialogClose(false);
         },
         modal: {
             ondismiss: function() {
-                form.reset();
+                setIsProcessing(false);
             }
         },
         prefill: {
-            name: user?.displayName ?? "Test User",
-            email: user?.email ?? "test.user@example.com",
+            name: user.displayName ?? "Test User",
+            email: user.email ?? "test.user@example.com",
             contact: "9999999999"
         },
         notes: {
@@ -180,6 +263,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                 title: "Payment Failed",
                 description: response.error.description,
             });
+            setIsProcessing(false);
         });
         rzp.open();
     } else {
@@ -188,11 +272,13 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
             title: "Error",
             description: "Payment gateway is not loaded. Please try again later.",
         });
+        setIsProcessing(false);
     }
   };
 
+
   function onCustomAmountSubmit(values: z.infer<typeof formSchema>) {
-    handlePurchase(values.customAmount, `${card.platform} Gift Card`);
+    beginPurchase(values.customAmount, `${card.platform} Gift Card`);
   }
 
   const PlanSelector = ({ plans }: { plans: GiftCardType[] }) => (
@@ -211,7 +297,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                 <p className="text-sm text-muted-foreground mt-1">₹{pCard.value}</p>
               </div>
             </AccordionTrigger>
-            <Button onClick={() => handlePurchase(pCard.value, pCard.name)} className="ml-4">
+            <Button onClick={() => beginPurchase(pCard.value, pCard.name)} className="ml-4">
                 Buy
             </Button>
           </div>
@@ -260,7 +346,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
         <h3 className="mb-3 text-sm font-medium text-muted-foreground">Select an Amount</h3>
         <div className="grid grid-cols-2 gap-3">
             {giftCardOptions.map(pCard => (
-                <Button key={pCard.id} variant="outline" onClick={() => handlePurchase(pCard.value, pCard.name)}>
+                <Button key={pCard.id} variant="outline" onClick={() => beginPurchase(pCard.value, pCard.name)}>
                   ₹{pCard.value}
                 </Button>
             ))}
@@ -307,11 +393,94 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
     </div>
   );
 
+  const PurchaseOptionsContent = (
+    <>
+      <DialogHeader>
+        <div className="flex items-start gap-4">
+           <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-muted flex-shrink-0">
+             {platformIcons[card.platform]}
+           </div>
+           <div>
+              <DialogTitle className="font-headline text-2xl">{dialogTitle}</DialogTitle>
+              <DialogDescription>{dialogDescription}</DialogDescription>
+           </div>
+        </div>
+      </DialogHeader>
+      
+      <div className="space-y-6 py-4">
+        {hasMemberships && hasGiftCards ? (
+          <Tabs defaultValue="membership" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="membership">Membership</TabsTrigger>
+              <TabsTrigger value="gift-card">Gift Card</TabsTrigger>
+            </TabsList>
+            <TabsContent value="membership" className="mt-4">
+              {MembershipContent}
+            </TabsContent>
+            <TabsContent value="gift-card" className="mt-4">
+              {GiftCardContent}
+            </TabsContent>
+          </Tabs>
+        ) : hasMemberships ? (
+          MembershipContent
+        ) : hasGiftCards ? (
+          GiftCardContent
+        ) : null}
+      </div>
+
+      <DialogFooter>
+        <DialogClose asChild>
+          <Button variant="outline">Close</Button>
+        </DialogClose>
+      </DialogFooter>
+    </>
+  );
+
+  const PaymentSelectionContent = (
+    <div className="space-y-4 text-center">
+        <DialogHeader>
+            <DialogTitle>Confirm Purchase</DialogTitle>
+            <DialogDescription>
+                You are about to buy <span className="font-bold">{purchaseDetails?.name}</span> for <span className="font-bold">₹{purchaseDetails?.amount}</span>.
+            </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3 pt-4">
+             <Button 
+                onClick={handleWalletPurchase} 
+                className="w-full"
+                disabled={isProcessing || walletBalance === null || walletBalance < (purchaseDetails?.amount ?? Infinity)}
+            >
+                {isProcessing ? (
+                    'Processing...'
+                 ) : (
+                    <>
+                        <Wallet className="mr-2 h-4 w-4" />
+                        Pay with Wallet (Balance: ₹{(walletBalance ?? 0).toFixed(2)})
+                    </>
+                )}
+            </Button>
+            <Button onClick={handleRazorpayPurchase} className="w-full" variant="secondary" disabled={isProcessing}>
+                 {isProcessing ? 'Processing...' : (
+                    <>
+                        <Landmark className="mr-2 h-4 w-4" />
+                        Pay with Card / UPI
+                    </>
+                 )}
+            </Button>
+        </div>
+
+        <DialogFooter className="pt-4 sm:justify-center">
+            <Button variant="ghost" onClick={() => setPurchaseDetails(null)} disabled={isProcessing}>
+                Back
+            </Button>
+        </DialogFooter>
+    </div>
+  );
+
+
   return (
-    <Dialog open={isDialogOpen} onOpenChange={(open) => {
-        setIsDialogOpen(open);
-        if (!open) form.reset();
-    }}>
+    <Dialog open={isDialogOpen} onOpenChange={onDialogClose}>
       <DialogTrigger asChild>
         <Card className="flex h-full cursor-pointer flex-col overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
           <CardHeader className="flex-row items-start gap-4 space-y-0 p-4">
@@ -340,44 +509,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
         </Card>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <div className="flex items-start gap-4">
-             <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-muted flex-shrink-0">
-               {platformIcons[card.platform]}
-             </div>
-             <div>
-                <DialogTitle className="font-headline text-2xl">{dialogTitle}</DialogTitle>
-                <DialogDescription>{dialogDescription}</DialogDescription>
-             </div>
-          </div>
-        </DialogHeader>
-        
-        <div className="space-y-6 py-4">
-          {hasMemberships && hasGiftCards ? (
-            <Tabs defaultValue="membership" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="membership">Membership</TabsTrigger>
-                <TabsTrigger value="gift-card">Gift Card</TabsTrigger>
-              </TabsList>
-              <TabsContent value="membership" className="mt-4">
-                {MembershipContent}
-              </TabsContent>
-              <TabsContent value="gift-card" className="mt-4">
-                {GiftCardContent}
-              </TabsContent>
-            </Tabs>
-          ) : hasMemberships ? (
-            MembershipContent
-          ) : hasGiftCards ? (
-            GiftCardContent
-          ) : null}
-        </div>
-
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Close</Button>
-          </DialogClose>
-        </DialogFooter>
+        {purchaseDetails ? PaymentSelectionContent : PurchaseOptionsContent}
       </DialogContent>
     </Dialog>
   );

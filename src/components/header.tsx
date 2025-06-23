@@ -1,6 +1,7 @@
+
 "use client";
 
-import { Gift, LogIn, LogOut, ShoppingBag, User, UserPlus } from 'lucide-react';
+import { Gift, LogIn, LogOut, ShoppingBag, User, UserPlus, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -15,7 +16,7 @@ import {
 import { Button } from './ui/button';
 
 export default function Header() {
-  const { user, logout } = useAuth();
+  const { user, logout, walletBalance } = useAuth();
 
   return (
     <header className="sticky top-0 z-20 border-b border-border/50 bg-background/50 backdrop-blur-lg">
@@ -56,6 +57,15 @@ export default function Header() {
                   <Link href="/orders">
                     <ShoppingBag className="mr-2" />
                     My Orders
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/wallet">
+                    <Wallet className="mr-2" />
+                    Wallet
+                    {walletBalance !== null && (
+                      <span className="ml-auto font-mono text-sm">₹{walletBalance.toFixed(2)}</span>
+                    )}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
