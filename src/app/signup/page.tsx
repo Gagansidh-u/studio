@@ -19,11 +19,13 @@ import { Input } from '@/components/ui/input';
 import Header from '@/components/header';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, UserPlus } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+  currency: z.enum(['INR', 'USD'], { required_error: 'Please select a currency.' }),
 });
 
 export default function SignupPage() {
@@ -56,6 +58,7 @@ export default function SignupPage() {
           email: userCredential.user.email,
           name: values.name,
           creationTime: serverTimestamp(),
+          currency: values.currency,
         });
         await sendEmailVerification(userCredential.user);
       }
@@ -130,6 +133,27 @@ export default function SignupPage() {
                         </FormControl>
                         <FormMessage />
                       </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="currency"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Currency</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select your currency" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="INR">INR (₹) - Indian Rupee</SelectItem>
+                                <SelectItem value="USD">USD ($) - US Dollar</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
                     )}
                   />
                   <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>

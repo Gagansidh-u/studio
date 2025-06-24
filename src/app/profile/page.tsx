@@ -17,7 +17,6 @@ import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertCircle, ArrowRight, Pencil, User, Mail, Phone, Wallet, Coins, Bell, Clock,
@@ -25,16 +24,17 @@ import {
 } from 'lucide-react';
 import { giftCards } from '@/lib/data';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 const InfoCard = ({ icon, title, value, onClick }: { icon: React.ReactNode, title: string, value: string, onClick?: () => void }) => (
-  <Card className="flex items-center p-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={onClick}>
-    <div className="text-primary">{icon}</div>
-    <div className="ml-4 flex-1">
-      <p className="text-sm font-medium">{title}</p>
-      <p className="text-sm text-muted-foreground">{value}</p>
-    </div>
-    <ArrowRight className="h-5 w-5 text-muted-foreground" />
-  </Card>
+    <Card className={cn("flex items-center p-4", onClick && "cursor-pointer hover:bg-muted/50 transition-colors")} onClick={onClick}>
+        <div className="text-primary">{icon}</div>
+        <div className="ml-4 flex-1">
+            <p className="text-sm font-medium">{title}</p>
+            <p className="text-sm text-muted-foreground">{value}</p>
+        </div>
+        {onClick && <ArrowRight className="h-5 w-5 text-muted-foreground" />}
+    </Card>
 );
 
 const NotificationItem = ({ icon, title, description, checked, onCheckedChange }: { icon: React.ReactNode, title: string, description: string, checked: boolean, onCheckedChange: (checked: boolean) => void }) => (
@@ -88,7 +88,7 @@ const phoneSchema = z.object({
 export default function ProfilePage() {
   const { 
     user, loading: authLoading, logout, walletBalance, walletCoins, changePassword,
-    currency, setCurrency, wishlist, removeFromWishlist, phoneNumber,
+    currency, wishlist, removeFromWishlist, phoneNumber,
     updateUserPhoneNumber, updateUserName
   } = useAuth();
   const router = useRouter();
@@ -101,7 +101,6 @@ export default function ProfilePage() {
     biometric: true,
   });
   const [isChangePasswordOpen, setIsChangePasswordOpen] = React.useState(false);
-  const [isCurrencyDialogOpen, setIsCurrencyDialogOpen] = React.useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = React.useState(false);
   const [isNameUpdateOpen, setIsNameUpdateOpen] = React.useState(false);
   const [isPhoneUpdateOpen, setIsPhoneUpdateOpen] = React.useState(false);
@@ -180,11 +179,6 @@ export default function ProfilePage() {
     }
   };
   
-  const handleCurrencyChange = async (newCurrency: 'INR' | 'USD') => {
-    await setCurrency(newCurrency);
-    setIsCurrencyDialogOpen(false);
-  };
-  
   const profileCompletion = React.useMemo(() => {
     let score = 0;
     if (user?.displayName) {
@@ -227,7 +221,7 @@ export default function ProfilePage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1 p-4 md:p-6 lg:p-8">
+      <main className="flex-1 p-4 md:p-6 lg:p-8 bg-transparent">
         <div className="mx-auto max-w-2xl space-y-8 pb-16">
           
           <div className="flex flex-col items-center gap-4 text-center">
@@ -264,7 +258,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div>
+            <div className="text-center">
               <h1 className="text-2xl font-bold">{user.displayName || 'Sarah Johnson'}</h1>
               <p className="text-muted-foreground">{user.email}</p>
               {phoneNumber && <p className="text-muted-foreground">{phoneNumber}</p>}
@@ -489,30 +483,7 @@ export default function ProfilePage() {
           <section>
             <h2 className="text-lg font-semibold mb-4">App Preferences</h2>
             <div className="space-y-3">
-              <Dialog open={isCurrencyDialogOpen} onOpenChange={setIsCurrencyDialogOpen}>
-                <DialogTrigger asChild>
-                  <InfoCard icon={<DollarSign className="h-6 w-6" />} title="Currency" value={currency} />
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-xs">
-                  <DialogHeader>
-                    <DialogTitle>Select Currency</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid gap-2 py-4">
-                    <Button
-                      variant={currency === 'INR' ? 'default' : 'outline'}
-                      onClick={() => handleCurrencyChange('INR')}
-                    >
-                      INR (₹) - Indian Rupee
-                    </Button>
-                    <Button
-                      variant={currency === 'USD' ? 'default' : 'outline'}
-                      onClick={() => handleCurrencyChange('USD')}
-                    >
-                      USD ($) - US Dollar
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <InfoCard icon={<DollarSign className="h-6 w-6" />} title="Currency" value={currency} />
               <InfoCard icon={<Globe className="h-6 w-6" />} title="Language" value="English" />
             </div>
           </section>

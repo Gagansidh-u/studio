@@ -33,7 +33,6 @@ interface AuthContextType {
   logout: () => void;
   deleteAccount: (password: string) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
-  setCurrency: (currency: 'INR' | 'USD') => Promise<void>;
   addToWishlist: (cardId: string) => Promise<void>;
   removeFromWishlist: (cardId: string) => Promise<void>;
   updateUserPhoneNumber: (newPhoneNumber: string) => Promise<void>;
@@ -53,7 +52,6 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
   deleteAccount: async () => { throw new Error('deleteAccount not implemented'); },
   changePassword: async () => { throw new Error('changePassword not implemented'); },
-  setCurrency: async () => { throw new Error('setCurrency not implemented'); },
   addToWishlist: async () => { throw new Error('addToWishlist not implemented'); },
   removeFromWishlist: async () => { throw new Error('removeFromWishlist not implemented'); },
   updateUserPhoneNumber: async () => { throw new Error('updateUserPhoneNumber not implemented'); },
@@ -77,6 +75,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const walletRef = doc(db, 'wallets', user.uid);
         const walletSnap = await getDoc(walletRef);
         if (!walletSnap.exists()) {
+          // This case is for users who existed before currency was mandatory
+          // It will be set on first load. New users have it set at signup.
           await setDoc(walletRef, {
             balance: 0,
             coins: 0,
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             email: user.email,
             name: user.displayName,
             creationTime: serverTimestamp(),
-            currency: 'INR',
+            currency: 'INR', // Default for existing users
             wishlist: [],
             phoneNumber: null,
           });
@@ -166,18 +166,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await reauthenticateWithCredential(user, credential);
     await updatePassword(user, newPassword);
   };
-  
-  const setCurrency = async (newCurrency: 'INR' | 'USD') => {
-    if (!user) return;
-    try {
-      const walletRef = doc(db, 'wallets', user.uid);
-      await updateDoc(walletRef, { currency: newCurrency });
-      toast({ title: 'Success', description: `Currency updated to ${newCurrency}.` });
-    } catch (error) {
-      console.error("Error updating currency:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update currency.' });
-    }
-  };
 
   const addToWishlist = async (cardId: string) => {
     if (!user) return;
@@ -235,7 +223,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     logout,
     deleteAccount,
     changePassword,
-    setCurrency,
     addToWishlist,
     removeFromWishlist,
     updateUserPhoneNumber,
