@@ -61,7 +61,12 @@ export default function SignupPage() {
       }
       router.push('/verify-email');
     } catch (error: any) {
-      setError(error.message);
+      if (error.code === 'auth/email-already-in-use') {
+        setError('This email address is already in use. Please use a different email or log in.');
+      } else {
+        console.error('Signup Error:', error);
+        setError('An unexpected error occurred during sign up. Please try again.');
+      }
     }
   }
 

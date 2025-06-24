@@ -41,10 +41,14 @@ export default function VerifyEmailPage() {
         description: "A new verification link has been sent to your email address.",
       });
     } catch (error: any) {
+      let description = "Failed to send verification email. Please try again later.";
+      if (error.code === 'auth/too-many-requests') {
+          description = "You've requested to resend the verification email too many times. Please wait a while before trying again.";
+      }
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to send verification email.",
+        description: description,
       });
     } finally {
       setIsSending(false);
