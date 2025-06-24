@@ -56,12 +56,12 @@ export default function WalletPage() {
     setIsProcessing(true);
 
     const options = {
-      key: "rzp_test_YourKey", // Remember to use a test key for development
+      key: "YOUR_LIVE_RAZORPAY_KEY", // Replace with your live Razorpay key
       amount: amount * 100,
       currency: currency,
       name: "Grock Wallet",
       description: `Add ${currencySymbol}${amount} to your wallet`,
-      image: "https://placehold.co/128x128.png",
+      image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2329abe2'%3E%3Cpath d='M20 5h-3.5C16.5 3.3 15.4 2 14 2c-1.4 0-2.5 1.3-2.5 3H8c0-1.7-1.1-3-2.5-3S3 3.3 3 5H2c-.6 0-1 .4-1 1v2c0 .6.4 1 1 1h1v10c0 .6.4 1 1 1h14c.6 0 1-.4 1-1V9h1c.6 0 1-.4 1-1V6c0-.6-.4-1-1-1zM8 8H4V6h4v2zm11 11H5V9h14v10zm-6-3c0-1.7-1.3-3-3-3s-3 1.3-3 3h2c0-.6.4-1 1-1s1 .4 1 1h2zm5-7h-4V6h4v2z'/%3E%3C/svg%3E",
       handler: async function (response: any) {
         try {
           const walletRef = doc(db, 'wallets', user.uid);
