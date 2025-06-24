@@ -162,6 +162,9 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
 
     const { amount: originalAmount, name, currency: purchaseCurrency } = purchaseDetails;
 
+    const gstAmount = originalAmount * 0.03;
+    const amountWithGst = originalAmount + gstAmount;
+
     // Cashback and coin logic is based on INR values for consistency
     const originalAmountInINR = purchaseCurrency === 'USD' 
       ? originalAmount * 80 // Rough conversion for logic, actual charge is in USD
@@ -181,7 +184,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
     }
 
     const discountAmount = purchaseCurrency === 'INR' ? discountAmountINR : discountAmountINR / 80;
-    const finalAmount = originalAmount - discountAmount;
+    const finalAmount = amountWithGst - discountAmount;
     const coinsEarned = Math.floor((finalAmount * (purchaseCurrency === 'USD' ? 80 : 1)) * 0.01);
     
     if (paymentMethod === 'wallet' && walletBalance < finalAmount) {
@@ -223,12 +226,14 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                 cardPlatform: card.platform,
                 cardName: name,
                 amount: originalAmount,
+                gstAmount: gstAmount,
                 finalAmount: finalAmount,
                 purchaseDate: serverTimestamp(),
                 status: 'Pending',
                 paymentId: paymentId,
                 paymentMethod: paymentMethod,
                 coinsUsed: coinsToUse,
+                discountAmount: discountAmount,
                 coinsEarned: coinsEarned,
                 recipientEmail: email,
                 currency: purchaseCurrency,
@@ -268,13 +273,16 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
     setIsProcessing(true);
     const { amount: originalAmount, name, currency: purchaseCurrency } = purchaseDetails;
 
+    const gstAmount = originalAmount * 0.03;
+    const amountWithGst = originalAmount + gstAmount;
+
     const originalAmountInINR = purchaseCurrency === 'USD' ? originalAmount * 80 : originalAmount;
     const maxDiscountInRupees = originalAmountInINR * 0.01;
     const maxCoinsToUse = Math.floor(maxDiscountInRupees * 10);
     const coinsToUse = applyCoins ? Math.min(walletCoins, maxCoinsToUse) : 0;
     const discountAmountINR = Math.floor(coinsToUse / 10);
     const discountAmount = purchaseCurrency === 'INR' ? discountAmountINR : discountAmountINR / 80;
-    const finalAmount = originalAmount - discountAmount;
+    const finalAmount = amountWithGst - discountAmount;
 
     if (finalAmount <= 0) {
       await processPurchase('wallet', `coins_${Date.now()}`, recipientEmail);
@@ -515,6 +523,10 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
   const PaymentSelectionContent = () => {
     const purchaseAmount = purchaseDetails?.amount ?? 0;
     const purchaseCurrency = purchaseDetails?.currency ?? 'INR';
+    const paymentSymbol = purchaseCurrency === 'INR' ? '₹' : '$';
+
+    const gstAmount = purchaseAmount * 0.03;
+    const totalWithGst = purchaseAmount + gstAmount;
     
     const originalAmountInINR = purchaseCurrency === 'USD' ? purchaseAmount * 80 : purchaseAmount;
     const maxDiscountInRupees = originalAmountInINR * 0.01;
@@ -523,43 +535,51 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
     const coinsToUse = Math.min(availableCoins, maxCoinsToUse);
     const discountAmountINR = applyCoins ? Math.floor(coinsToUse / 10) : 0;
     const discountAmount = purchaseCurrency === 'INR' ? discountAmountINR : discountAmountINR / 80;
-    const finalAmount = purchaseAmount - discountAmount;
-    const paymentSymbol = purchaseCurrency === 'INR' ? '₹' : '$';
+    const finalAmount = totalWithGst - discountAmount;
 
     return (
         <div className="space-y-4">
-            <DialogHeader className="text-center">
+            <DialogHeader>
                 <DialogTitle>Confirm Purchase</DialogTitle>
                 <DialogDescription>
-                    You are buying <span className="font-bold">{purchaseDetails?.name}</span> for <span className="font-bold">{paymentSymbol}{purchaseDetails?.amount}</span>.
+                    Review your order for <span className="font-bold">{purchaseDetails?.name}</span>.
                 </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="recipient-email">Send Gift Card to:</Label>
-                    <Input
-                        id="recipient-email"
-                        type="email"
-                        placeholder="Enter email to receive the code"
-                        value={recipientEmail}
-                        onChange={(e) => setRecipientEmail(e.target.value)}
-                        disabled={isProcessing}
-                    />
-                    <p className="text-xs text-muted-foreground">The gift card details will be sent to this email address.</p>
+            <Card className="bg-muted/50 p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Price</span>
+                    <span>{paymentSymbol}{purchaseAmount.toFixed(2)}</span>
                 </div>
-            </div>
+                <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">GST (3%)</span>
+                    <span>+ {paymentSymbol}{gstAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-semibold border-t pt-2 mt-2">
+                    <span>Subtotal</span>
+                    <span>{paymentSymbol}{totalWithGst.toFixed(2)}</span>
+                </div>
+            </Card>
 
-            <div className="rounded-lg border border-primary/20 bg-primary/10 p-3 text-center text-sm font-medium text-primary">
-                <p>You'll earn <span className="font-bold">1% unlimited cashback</span> in Grock Coins on this purchase!</p>
+            <div className="space-y-2">
+                <Label htmlFor="recipient-email">Send Gift Card to:</Label>
+                <Input
+                    id="recipient-email"
+                    type="email"
+                    placeholder="Enter email to receive the code"
+                    value={recipientEmail}
+                    onChange={(e) => setRecipientEmail(e.target.value)}
+                    disabled={isProcessing}
+                />
+                <p className="text-xs text-muted-foreground">The gift card details will be sent to this email address.</p>
             </div>
-
+            
             {coinsToUse > 0 && (
                 <div className="flex items-center justify-between space-x-2 rounded-lg border p-3 my-2">
                     <div className="flex flex-col">
-                        <Label htmlFor="apply-coins" className="cursor-pointer">Apply Coins</Label>
+                        <Label htmlFor="apply-coins" className="cursor-pointer">Apply Discount</Label>
                         <span className="text-xs text-muted-foreground">
-                            Use {coinsToUse} coins for a ₹{Math.floor(coinsToUse / 10)} discount.
+                            Use {coinsToUse} coins for a {paymentSymbol}{discountAmount.toFixed(2)} discount.
                         </span>
                     </div>
                     <Switch
@@ -571,11 +591,13 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                 </div>
             )}
             
-            {applyCoins && discountAmount > 0 && (
-                <div className="text-center text-lg font-semibold text-primary">
-                    Final Price: {paymentSymbol}{finalAmount.toFixed(2)}
+            <Card className="p-4 text-center">
+                <div className="flex justify-between items-center text-lg font-bold">
+                    <span>Final Price:</span>
+                    <span>{paymentSymbol}{finalAmount.toFixed(2)}</span>
                 </div>
-            )}
+                 <p className="text-xs text-primary mt-2">You'll earn 1% cashback in Grock Coins on this purchase!</p>
+            </Card>
 
             <div className="space-y-3 pt-2">
                 <Button 

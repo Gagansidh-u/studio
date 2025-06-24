@@ -14,7 +14,7 @@ import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Coins, CreditCard, Landmark, Mail, Calendar, Hash, CheckCircle, Clock } from 'lucide-react';
+import { Coins, CreditCard, Landmark, Mail, Calendar, Hash, CheckCircle, Clock, Percent } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const getStatusVariant = (status: Order['status']): BadgeProps['variant'] => {
@@ -184,18 +184,32 @@ export default function OrdersPage() {
                   />
                    <OrderDetailItem 
                     icon={<CreditCard className="h-5 w-5" />}
-                    label="Final Amount"
-                    value={formatCurrency(selectedOrder.finalAmount ?? selectedOrder.amount, selectedOrder.currency)}
+                    label="Base Price"
+                    value={formatCurrency(selectedOrder.amount, selectedOrder.currency)}
+                  />
+                  {selectedOrder.gstAmount && (
+                    <OrderDetailItem 
+                      icon={<Percent className="h-5 w-5" />}
+                      label="GST (3%)"
+                      value={formatCurrency(selectedOrder.gstAmount, selectedOrder.currency)}
+                    />
+                  )}
+                  {selectedOrder.discountAmount && selectedOrder.discountAmount > 0 && (
+                    <OrderDetailItem 
+                      icon={<Coins className="h-5 w-5 text-yellow-500" />}
+                      label="Discount Applied"
+                      value={`- ${formatCurrency(selectedOrder.discountAmount, selectedOrder.currency)}`}
+                    />
+                  )}
+                   <OrderDetailItem 
+                    icon={<CreditCard className="h-5 w-5" />}
+                    label="Total Paid"
+                    value={<span className="font-semibold">{formatCurrency(selectedOrder.finalAmount ?? selectedOrder.amount, selectedOrder.currency)}</span>}
                   />
                    <OrderDetailItem 
                     icon={<Coins className="h-5 w-5 text-yellow-500" />}
                     label="Coins Earned"
                     value={selectedOrder.coinsEarned ?? 0}
-                  />
-                   <OrderDetailItem 
-                    icon={<Coins className="h-5 w-5 text-yellow-500" />}
-                    label="Coins Used"
-                    value={selectedOrder.coinsUsed ?? 0}
                   />
                   <OrderDetailItem 
                     icon={<Hash className="h-5 w-5" />}

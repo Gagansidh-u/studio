@@ -22,12 +22,14 @@ export type Order = {
   cardName: string;
   amount: number;
   finalAmount?: number;
+  gstAmount?: number;
   purchaseDate: Timestamp;
   status: 'Completed' | 'Pending' | 'Processing';
   paymentId: string;
   paymentMethod: 'razorpay' | 'wallet';
   coinsEarned?: number;
   coinsUsed?: number;
+  discountAmount?: number;
   recipientEmail: string;
   currency: 'INR' | 'USD';
 };
