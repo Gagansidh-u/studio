@@ -1,6 +1,7 @@
+
 "use client";
 
-import { Gift, LogIn, LogOut, ShoppingBag, User, UserPlus, Wallet, Trash2, AlertCircle, LayoutDashboard } from 'lucide-react';
+import { Gift, LogIn, LogOut, ShoppingBag, User, UserPlus, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -13,53 +14,9 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Button } from './ui/button';
-import { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 export default function Header() {
-  const { user, logout, walletBalance, deleteAccount } = useAuth();
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-
-  const handleDeleteAccount = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsDeleting(true);
-    setError(null);
-    try {
-      await deleteAccount(password);
-      setIsDeleteDialogOpen(false);
-    } catch (err: any) {
-      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setError("Incorrect password. Please try again.");
-      } else {
-        setError("An unexpected error occurred. Please try again later.");
-      }
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const onOpenChange = (open: boolean) => {
-    if (!open) {
-      setPassword('');
-      setError(null);
-      setIsDeleting(false);
-    }
-    setIsDeleteDialogOpen(open);
-  }
-
+  const { user, logout, walletBalance } = useAuth();
 
   return (
     <>
@@ -98,6 +55,12 @@ export default function Header() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
+                    <Link href="/profile">
+                      <User />
+                      My Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link href="/orders">
                       <ShoppingBag />
                       My Orders
@@ -116,11 +79,6 @@ export default function Header() {
                   <DropdownMenuItem onClick={logout}>
                     <LogOut />
                     Log out
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)} className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
-                    <Trash2 />
-                    Delete Account
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -143,48 +101,6 @@ export default function Header() {
           </div>
         </div>
       </header>
-      
-      <Dialog open={isDeleteDialogOpen} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Are you absolutely sure?</DialogTitle>
-            <DialogDescription>
-              This action cannot be undone. This will permanently delete your
-              account. Please enter your password to confirm.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleDeleteAccount} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={isDeleting}>Cancel</Button>
-              <Button
-                type="submit"
-                variant="destructive"
-                disabled={isDeleting || !password}
-              >
-                {isDeleting ? "Deleting..." : "Delete Account"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
