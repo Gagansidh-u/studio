@@ -10,7 +10,6 @@ import { useAuth } from '@/contexts/auth-context';
 import Header from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -186,22 +185,35 @@ export default function ProfilePage() {
     setIsCurrencyDialogOpen(false);
   };
   
+  const profileCompletion = React.useMemo(() => {
+    let score = 0;
+    if (user?.displayName) {
+      score += 50;
+    }
+    if (phoneNumber) {
+      score += 50;
+    }
+    return score;
+  }, [user?.displayName, phoneNumber]);
+
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (profileCompletion / 100) * circumference;
+
   if (authLoading || !user) {
     return (
       <div className="flex min-h-screen flex-col bg-background">
         <Header />
         <main className="flex-1 p-4 md:p-6 lg:p-8">
             <div className="mx-auto max-w-2xl space-y-6">
-                <Skeleton className="h-24 w-full" />
                 <div className="flex items-center gap-4">
-                    <Skeleton className="h-20 w-20 rounded-full" />
+                    <Skeleton className="h-24 w-24 rounded-full" />
                     <div className="space-y-2 flex-1">
                         <Skeleton className="h-6 w-1/2" />
                         <Skeleton className="h-4 w-3/4" />
                     </div>
                 </div>
-                <Skeleton className="h-10 w-32" />
-                <div className="space-y-4">
+                <div className="space-y-4 pt-4">
                     <Skeleton className="h-16 w-full" />
                     <Skeleton className="h-16 w-full" />
                     <Skeleton className="h-16 w-full" />
@@ -212,39 +224,61 @@ export default function ProfilePage() {
     );
   }
 
-  const profileCompletion = user?.displayName ? 50 : 0;
-
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <div className="mx-auto max-w-2xl space-y-8 pb-16">
           
-          <Card className="flex items-center gap-4 p-4 cursor-pointer hover:bg-muted/50 transition-colors">
-            <div className="flex-1 space-y-2">
-              <label htmlFor="profile-progress" className="text-sm font-medium">Profile Completion</label>
-              <Progress id="profile-progress" value={profileCompletion} className="h-2" />
-              <p className="text-xs text-muted-foreground">Complete your profile to unlock all features</p>
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:text-left">
+            <div className="relative h-24 w-24 flex-shrink-0">
+              <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100">
+                <circle
+                  className="text-border"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  fill="transparent"
+                />
+                <circle
+                  className="text-primary transition-all duration-500"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  fill="transparent"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={offset}
+                  transform="rotate(-90 50 50)"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Avatar className="h-20 w-20">
+                  <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
+                  <AvatarFallback><User className="h-10 w-10" /></AvatarFallback>
+                </Avatar>
+              </div>
             </div>
-            <ArrowRight className="h-5 w-5 text-muted-foreground" />
-          </Card>
 
-          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
-              <AvatarFallback>
-                <User className="h-10 w-10" />
-              </AvatarFallback>
-            </Avatar>
             <div className="flex-1">
               <h1 className="text-2xl font-bold">{user.displayName || 'Sarah Johnson'}</h1>
               <p className="text-muted-foreground">{user.email}</p>
               {phoneNumber && <p className="text-muted-foreground">{phoneNumber}</p>}
             </div>
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setIsNameUpdateOpen(true)}>
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit Profile
-            </Button>
+
+            <div className="flex flex-col items-center sm:items-end gap-2 w-full sm:w-auto">
+              <Button variant="outline" className="w-full sm:w-auto" onClick={() => setIsNameUpdateOpen(true)}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit Profile
+              </Button>
+              <p className="text-sm font-medium text-muted-foreground">
+                {profileCompletion}% Profile Complete
+              </p>
+            </div>
           </div>
 
           <section>
