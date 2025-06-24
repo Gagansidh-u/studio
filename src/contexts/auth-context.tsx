@@ -27,6 +27,7 @@ interface AuthContextType {
   walletCoins: number | null;
   currency: 'INR' | 'USD';
   wishlist: string[];
+  phoneNumber: string | null;
   login: typeof signInWithEmailAndPassword;
   signup: typeof createUserWithEmailAndPassword;
   logout: () => void;
@@ -35,6 +36,8 @@ interface AuthContextType {
   setCurrency: (currency: 'INR' | 'USD') => Promise<void>;
   addToWishlist: (cardId: string) => Promise<void>;
   removeFromWishlist: (cardId: string) => Promise<void>;
+  updateUserPhoneNumber: (newPhoneNumber: string) => Promise<void>;
+  updateUserName: (newName: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -44,6 +47,7 @@ const AuthContext = createContext<AuthContextType>({
   walletCoins: null,
   currency: 'INR',
   wishlist: [],
+  phoneNumber: null,
   login: async () => { throw new Error('login not implemented'); },
   signup: async () => { throw new Error('signup not implemented'); },
   logout: () => {},
@@ -52,6 +56,8 @@ const AuthContext = createContext<AuthContextType>({
   setCurrency: async () => { throw new Error('setCurrency not implemented'); },
   addToWishlist: async () => { throw new Error('addToWishlist not implemented'); },
   removeFromWishlist: async () => { throw new Error('removeFromWishlist not implemented'); },
+  updateUserPhoneNumber: async () => { throw new Error('updateUserPhoneNumber not implemented'); },
+  updateUserName: async () => { throw new Error('updateUserName not implemented'); },
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -61,6 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [walletCoins, setWalletCoins] = useState<number | null>(null);
   const [currency, setCurrencyState] = useState<'INR' | 'USD'>('INR');
   const [wishlist, setWishlist] = useState<string[]>([]);
+  const [phoneNumber, setPhoneNumber] = useState<string | null>(null);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -79,6 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             creationTime: serverTimestamp(),
             currency: 'INR',
             wishlist: [],
+            phoneNumber: null,
           });
         }
       }
@@ -101,11 +109,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setWalletCoins(data.coins ?? 0);
           setCurrencyState(data.currency ?? 'INR');
           setWishlist(data.wishlist ?? []);
+          setPhoneNumber(data.phoneNumber ?? null);
         } else {
           setWalletBalance(0);
           setWalletCoins(0);
           setCurrencyState('INR');
           setWishlist([]);
+          setPhoneNumber(null);
         }
       });
     } else {
@@ -113,6 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setWalletCoins(null);
       setCurrencyState('INR');
       setWishlist([]);
+      setPhoneNumber(null);
     }
 
     return () => {
@@ -195,6 +206,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to remove from wishlist.' });
     }
   };
+  
+  const updateUserName = async (newName: string) => {
+    if (!user) throw new Error("User not authenticated");
+    await updateProfile(user, { displayName: newName });
+    const walletRef = doc(db, "wallets", user.uid);
+    await updateDoc(walletRef, { name: newName });
+    toast({ title: 'Success', description: 'Your name has been updated.' });
+  };
+
+  const updateUserPhoneNumber = async (newPhoneNumber: string) => {
+    if (!user) throw new Error("User not authenticated");
+    const walletRef = doc(db, "wallets", user.uid);
+    await updateDoc(walletRef, { phoneNumber: newPhoneNumber });
+    toast({ title: 'Success', description: 'Your phone number has been updated.' });
+  };
 
   const value: AuthContextType = {
     user,
@@ -203,6 +229,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     walletCoins,
     currency,
     wishlist,
+    phoneNumber,
     login: (auth: Auth, email: string, p: string) => signInWithEmailAndPassword(auth, email, p),
     signup: (auth: Auth, email: string, p: string) => createUserWithEmailAndPassword(auth, email, p),
     logout,
@@ -211,6 +238,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setCurrency,
     addToWishlist,
     removeFromWishlist,
+    updateUserPhoneNumber,
+    updateUserName,
   };
 
   return (

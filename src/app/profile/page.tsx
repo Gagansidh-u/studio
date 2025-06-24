@@ -77,11 +77,20 @@ const changePasswordSchema = z.object({
   path: ["confirmPassword"],
 });
 
+const nameSchema = z.object({
+  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
+});
+
+const phoneSchema = z.object({
+  phoneNumber: z.string().min(10, { message: 'Please enter a valid phone number with country code.' }),
+});
+
 
 export default function ProfilePage() {
   const { 
     user, loading: authLoading, logout, walletBalance, walletCoins, changePassword,
-    currency, setCurrency, wishlist, removeFromWishlist
+    currency, setCurrency, wishlist, removeFromWishlist, phoneNumber,
+    updateUserPhoneNumber, updateUserName
   } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -95,6 +104,8 @@ export default function ProfilePage() {
   const [isChangePasswordOpen, setIsChangePasswordOpen] = React.useState(false);
   const [isCurrencyDialogOpen, setIsCurrencyDialogOpen] = React.useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = React.useState(false);
+  const [isNameUpdateOpen, setIsNameUpdateOpen] = React.useState(false);
+  const [isPhoneUpdateOpen, setIsPhoneUpdateOpen] = React.useState(false);
   const [changePasswordError, setChangePasswordError] = React.useState<string | null>(null);
   
   const wishlistedCards = React.useMemo(() => 
@@ -104,11 +115,17 @@ export default function ProfilePage() {
 
   const passwordForm = useForm<z.infer<typeof changePasswordSchema>>({
     resolver: zodResolver(changePasswordSchema),
-    defaultValues: {
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    },
+    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
+  });
+
+  const nameForm = useForm<z.infer<typeof nameSchema>>({
+    resolver: zodResolver(nameSchema),
+    defaultValues: { name: '' },
+  });
+
+  const phoneForm = useForm<z.infer<typeof phoneSchema>>({
+    resolver: zodResolver(phoneSchema),
+    defaultValues: { phoneNumber: '' },
   });
 
   React.useEffect(() => {
@@ -116,26 +133,51 @@ export default function ProfilePage() {
       router.push('/login');
     }
   }, [user, authLoading, router]);
+  
+  React.useEffect(() => {
+    if (user && isNameUpdateOpen) {
+      nameForm.reset({ name: user.displayName || '' });
+    }
+  }, [user, isNameUpdateOpen, nameForm]);
+
+  React.useEffect(() => {
+    if (isPhoneUpdateOpen) {
+      phoneForm.reset({ phoneNumber: phoneNumber || '' });
+    }
+  }, [phoneNumber, isPhoneUpdateOpen, phoneForm]);
 
   const onPasswordSubmit = async (values: z.infer<typeof changePasswordSchema>) => {
     setChangePasswordError(null);
     try {
       await changePassword(values.currentPassword, values.newPassword);
-      toast({
-        title: "Success",
-        description: "Your password has been changed successfully.",
-      });
+      toast({ title: "Success", description: "Your password has been changed successfully." });
       setIsChangePasswordOpen(false);
       passwordForm.reset();
     } catch (error: any) {
-      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        setChangePasswordError('The current password you entered is incorrect.');
-      } else if (error.code === 'auth/weak-password') {
-        setChangePasswordError('The new password is too weak. It must be at least 6 characters.');
-      } else {
-        setChangePasswordError('An unexpected error occurred. Please try again.');
-        console.error(error);
-      }
+      const errorMessage = error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential'
+        ? 'The current password you entered is incorrect.'
+        : error.code === 'auth/weak-password'
+        ? 'The new password is too weak. It must be at least 6 characters.'
+        : 'An unexpected error occurred. Please try again.';
+      setChangePasswordError(errorMessage);
+    }
+  };
+
+  const onNameSubmit = async (values: z.infer<typeof nameSchema>) => {
+    try {
+      await updateUserName(values.name);
+      setIsNameUpdateOpen(false);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update name.' });
+    }
+  };
+
+  const onPhoneSubmit = async (values: z.infer<typeof phoneSchema>) => {
+    try {
+      await updateUserPhoneNumber(values.phoneNumber);
+      setIsPhoneUpdateOpen(false);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update phone number.' });
     }
   };
   
@@ -197,9 +239,9 @@ export default function ProfilePage() {
             <div className="flex-1">
               <h1 className="text-2xl font-bold">{user.displayName || 'Sarah Johnson'}</h1>
               <p className="text-muted-foreground">{user.email}</p>
-              {user.phoneNumber && <p className="text-muted-foreground">{user.phoneNumber}</p>}
+              {phoneNumber && <p className="text-muted-foreground">{phoneNumber}</p>}
             </div>
-            <Button variant="outline" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setIsNameUpdateOpen(true)}>
               <Pencil className="h-4 w-4 mr-2" />
               Edit Profile
             </Button>
@@ -208,9 +250,9 @@ export default function ProfilePage() {
           <section>
             <h2 className="text-lg font-semibold mb-4">Personal Information</h2>
             <div className="space-y-3">
-              <InfoCard icon={<User className="h-6 w-6" />} title="Name" value={user.displayName || 'Not set'} />
+              <InfoCard icon={<User className="h-6 w-6" />} title="Name" value={user.displayName || 'Not set'} onClick={() => setIsNameUpdateOpen(true)} />
               <InfoCard icon={<Mail className="h-6 w-6" />} title="Email" value={user.email || 'Not set'} />
-              <InfoCard icon={<Phone className="h-6 w-6" />} title="Phone" value={user.phoneNumber || ''} />
+              <InfoCard icon={<Phone className="h-6 w-6" />} title="Phone" value={phoneNumber || 'Not set'} onClick={() => setIsPhoneUpdateOpen(true)} />
             </div>
           </section>
 
@@ -448,6 +490,70 @@ export default function ProfilePage() {
 
         </div>
       </main>
+
+      {/* Name Update Dialog */}
+      <Dialog open={isNameUpdateOpen} onOpenChange={setIsNameUpdateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Profile Name</DialogTitle>
+            <DialogDescription>Update your display name below.</DialogDescription>
+          </DialogHeader>
+          <Form {...nameForm}>
+            <form onSubmit={nameForm.handleSubmit(onNameSubmit)} className="space-y-4 py-4">
+              <FormField
+                control={nameForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit" disabled={nameForm.formState.isSubmitting}>
+                  {nameForm.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Phone Update Dialog */}
+      <Dialog open={isPhoneUpdateOpen} onOpenChange={setIsPhoneUpdateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Phone Number</DialogTitle>
+            <DialogDescription>Enter your phone number, including country code.</DialogDescription>
+          </DialogHeader>
+          <Form {...phoneForm}>
+            <form onSubmit={phoneForm.handleSubmit(onPhoneSubmit)} className="space-y-4 py-4">
+              <FormField
+                control={phoneForm.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="+1 123 456 7890" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit" disabled={phoneForm.formState.isSubmitting}>
+                  {phoneForm.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
