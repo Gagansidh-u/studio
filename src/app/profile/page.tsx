@@ -202,7 +202,7 @@ export default function ProfilePage() {
             <div className="flex-1">
               <h1 className="text-2xl font-bold">{user.displayName || 'Sarah Johnson'}</h1>
               <p className="text-muted-foreground">{user.email}</p>
-              <p className="text-muted-foreground">+91 99999 99999</p>
+              {user.phoneNumber && <p className="text-muted-foreground">{user.phoneNumber}</p>}
             </div>
             <Button variant="outline">
               <Pencil className="h-4 w-4 mr-2" />
@@ -215,7 +215,7 @@ export default function ProfilePage() {
             <div className="space-y-3">
               <InfoCard icon={<User className="h-6 w-6" />} title="Name" value={user.displayName || 'Not set'} />
               <InfoCard icon={<Mail className="h-6 w-6" />} title="Email" value={user.email || 'Not set'} />
-              <InfoCard icon={<Phone className="h-6 w-6" />} title="Phone" value="+91 99999 99999" />
+              <InfoCard icon={<Phone className="h-6 w-6" />} title="Phone" value={user.phoneNumber || ''} />
             </div>
           </section>
 
