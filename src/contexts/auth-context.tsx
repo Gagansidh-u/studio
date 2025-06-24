@@ -17,7 +17,7 @@ import {
 } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
-import { doc, onSnapshot, getDoc, setDoc, deleteDoc, serverTimestamp, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc, setDoc, deleteDoc, serverTimestamp, updateDoc, arrayRemove, arrayUnion, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
@@ -147,11 +147,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const credential = EmailAuthProvider.credential(user.email, password);
       await reauthenticateWithCredential(user, credential);
       
+      // Create a batched write to delete all user data atomically
+      const batch = writeBatch(db);
+
+      // 1. Delete user's wallet
       const walletRef = doc(db, 'wallets', user.uid);
-      await deleteDoc(walletRef);
+      batch.delete(walletRef);
+
+      // 2. Query for and delete all user's orders
+      const ordersQuery = query(collection(db, 'orders'), where('userId', '==', user.uid));
+      const ordersSnapshot = await getDocs(ordersQuery);
+      ordersSnapshot.forEach((orderDoc) => {
+        batch.delete(orderDoc.ref);
+      });
+
+      // Commit all deletions from Firestore
+      await batch.commit();
+
+      // Finally, delete the user from Authentication
       await deleteUser(user);
 
-      toast({ title: 'Account Deleted', description: 'Your account has been permanently deleted.' });
+      toast({ title: 'Account Deleted', description: 'Your account and all associated data have been permanently deleted.' });
     } catch (error: any) {
       console.error("Error deleting account: ", error);
       if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
