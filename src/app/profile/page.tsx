@@ -202,15 +202,15 @@ export default function ProfilePage() {
 
   if (authLoading || !user) {
     return (
-      <div className="flex min-h-screen flex-col bg-background">
+      <div className="flex min-h-screen flex-col">
         <Header />
         <main className="flex-1 p-4 md:p-6 lg:p-8">
             <div className="mx-auto max-w-2xl space-y-6">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col items-center gap-4">
                     <Skeleton className="h-24 w-24 rounded-full" />
-                    <div className="space-y-2 flex-1">
-                        <Skeleton className="h-6 w-1/2" />
-                        <Skeleton className="h-4 w-3/4" />
+                    <div className="space-y-2 flex flex-col items-center">
+                        <Skeleton className="h-6 w-32" />
+                        <Skeleton className="h-4 w-48" />
                     </div>
                 </div>
                 <div className="space-y-4 pt-4">
@@ -225,12 +225,12 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <div className="mx-auto max-w-2xl space-y-8 pb-16">
           
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:text-left">
+          <div className="flex flex-col items-center gap-4 text-center">
             <div className="relative h-24 w-24 flex-shrink-0">
               <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100">
                 <circle
@@ -264,13 +264,13 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="flex-1">
+            <div>
               <h1 className="text-2xl font-bold">{user.displayName || 'Sarah Johnson'}</h1>
               <p className="text-muted-foreground">{user.email}</p>
               {phoneNumber && <p className="text-muted-foreground">{phoneNumber}</p>}
             </div>
 
-            <div className="flex flex-col items-center sm:items-end gap-2 w-full sm:w-auto">
+            <div className="flex flex-col items-center gap-2 w-full sm:w-auto">
               <Button variant="outline" className="w-full sm:w-auto" onClick={() => setIsNameUpdateOpen(true)}>
                 <Pencil className="h-4 w-4 mr-2" />
                 Edit Profile
