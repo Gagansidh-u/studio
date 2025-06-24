@@ -282,7 +282,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
     }
 
     const options = {
-        key: "YOUR_LIVE_RAZORPAY_KEY", // Replace with your live Razorpay key
+        key: "rzp_live_YjljJCP3ewIy4d",
         amount: finalAmount * 100, 
         currency: purchaseCurrency,
         name: "Grock",

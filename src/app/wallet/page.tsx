@@ -56,7 +56,7 @@ export default function WalletPage() {
     setIsProcessing(true);
 
     const options = {
-      key: "YOUR_LIVE_RAZORPAY_KEY", // Replace with your live Razorpay key
+      key: "rzp_live_YjljJCP3ewIy4d",
       amount: amount * 100,
       currency: currency,
       name: "Grock Wallet",
