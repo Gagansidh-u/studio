@@ -12,12 +12,14 @@ import {
   deleteUser,
   EmailAuthProvider,
   reauthenticateWithCredential,
-  updatePassword
+  updatePassword,
+  updateProfile
 } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
+import { auth, db, storage } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { doc, onSnapshot, getDoc, setDoc, deleteDoc, serverTimestamp, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface AuthContextType {
   user: User | null;
@@ -34,6 +36,7 @@ interface AuthContextType {
   setCurrency: (currency: 'INR' | 'USD') => Promise<void>;
   addToWishlist: (cardId: string) => Promise<void>;
   removeFromWishlist: (cardId: string) => Promise<void>;
+  updateProfilePicture: (file: File) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -51,6 +54,7 @@ const AuthContext = createContext<AuthContextType>({
   setCurrency: async () => { throw new Error('setCurrency not implemented'); },
   addToWishlist: async () => { throw new Error('addToWishlist not implemented'); },
   removeFromWishlist: async () => { throw new Error('removeFromWishlist not implemented'); },
+  updateProfilePicture: async () => { throw new Error('updateProfilePicture not implemented'); },
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -195,6 +199,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateProfilePicture = async (file: File) => {
+    if (!user) {
+      throw new Error("No user is logged in.");
+    }
+
+    try {
+      const fileRef = storageRef(storage, `profile-pictures/${user.uid}`);
+      await uploadBytes(fileRef, file);
+      const photoURL = await getDownloadURL(fileRef);
+      await updateProfile(user, { photoURL });
+      setUser({ ...user, photoURL }); // Force re-render with new image
+    } catch (error) {
+      console.error("Error updating profile picture: ", error);
+      throw error;
+    }
+  };
+
   const value: AuthContextType = {
     user,
     loading,
@@ -210,6 +231,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setCurrency,
     addToWishlist,
     removeFromWishlist,
+    updateProfilePicture,
   };
 
   return (

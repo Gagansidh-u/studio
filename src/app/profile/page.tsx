@@ -22,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertCircle, ArrowRight, Camera, Pencil, User, Mail, Phone, Wallet, Coins, Bell, Clock,
-  Lock, Fingerprint, History, Heart, Share2, Headset, DollarSign, Globe, LogOut, Trash2
+  Lock, Fingerprint, History, Heart, Share2, Headset, DollarSign, Globe, LogOut, Trash2, Loader2
 } from 'lucide-react';
 import { giftCards } from '@/lib/data';
 import Image from 'next/image';
@@ -81,7 +81,7 @@ const changePasswordSchema = z.object({
 export default function ProfilePage() {
   const { 
     user, loading: authLoading, logout, walletBalance, walletCoins, changePassword,
-    currency, setCurrency, wishlist, removeFromWishlist 
+    currency, setCurrency, wishlist, removeFromWishlist, updateProfilePicture
   } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -97,6 +97,9 @@ export default function ProfilePage() {
   const [isWishlistOpen, setIsWishlistOpen] = React.useState(false);
   const [changePasswordError, setChangePasswordError] = React.useState<string | null>(null);
   
+  const [isUploading, setIsUploading] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   const wishlistedCards = React.useMemo(() => 
     giftCards.filter(card => wishlist.includes(card.id)), 
     [wishlist]
@@ -144,6 +147,41 @@ export default function ProfilePage() {
     setIsCurrencyDialogOpen(false);
   };
   
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      toast({
+        variant: "destructive",
+        title: "File too large",
+        description: "Please select an image smaller than 2MB.",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      await updateProfilePicture(file);
+      toast({
+        title: "Profile picture updated",
+        description: "Your new picture has been saved.",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: "Could not update your profile picture. Please try again.",
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   if (authLoading || !user) {
     return (
       <div className="flex min-h-screen flex-col bg-background">
@@ -189,14 +227,28 @@ export default function ProfilePage() {
 
           <div className="flex items-center gap-4">
             <div className="relative">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/png, image/jpeg, image/webp"
+                className="hidden"
+                disabled={isUploading}
+              />
               <Avatar className="h-20 w-20">
                 <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
                 <AvatarFallback>
                   <User className="h-10 w-10" />
                 </AvatarFallback>
               </Avatar>
-              <Button size="icon" className="absolute bottom-0 right-0 h-7 w-7 rounded-full">
-                <Camera className="h-4 w-4" />
+              <Button
+                size="icon"
+                className="absolute bottom-0 right-0 h-7 w-7 rounded-full"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                aria-label="Upload profile picture"
+              >
+                {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
               </Button>
             </div>
             <div className="flex-1">
