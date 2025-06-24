@@ -3,6 +3,9 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/contexts/auth-context';
 import Header from '@/components/header';
 import { Button } from '@/components/ui/button';
@@ -11,8 +14,13 @@ import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { useToast } from "@/hooks/use-toast";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { 
-  ArrowRight, Camera, Pencil, User, Mail, Phone, Wallet, Coins, Bell, Clock, 
+  AlertCircle, ArrowRight, Camera, Pencil, User, Mail, Phone, Wallet, Coins, Bell, Clock, 
   Lock, Fingerprint, History, Heart, Share2, Headset, DollarSign, Globe, LogOut 
 } from 'lucide-react';
 
@@ -57,10 +65,20 @@ const QuickActionCard = ({ icon, title, description, onClick }: { icon: React.Re
     </Card>
 );
 
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, { message: 'Current password is required.' }),
+  newPassword: z.string().min(6, { message: 'New password must be at least 6 characters.' }),
+  confirmPassword: z.string(),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
 
 export default function ProfilePage() {
-  const { user, loading: authLoading, logout, walletBalance, walletCoins } = useAuth();
+  const { user, loading: authLoading, logout, walletBalance, walletCoins, changePassword } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   
   const [notifications, setNotifications] = React.useState({
     deals: true,
@@ -68,12 +86,45 @@ export default function ProfilePage() {
     newsletter: false,
     biometric: true,
   });
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = React.useState(false);
+  const [changePasswordError, setChangePasswordError] = React.useState<string | null>(null);
+
+  const passwordForm = useForm<z.infer<typeof changePasswordSchema>>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    },
+  });
 
   React.useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
     }
   }, [user, authLoading, router]);
+
+  const onPasswordSubmit = async (values: z.infer<typeof changePasswordSchema>) => {
+    setChangePasswordError(null);
+    try {
+      await changePassword(values.currentPassword, values.newPassword);
+      toast({
+        title: "Success",
+        description: "Your password has been changed successfully.",
+      });
+      setIsChangePasswordOpen(false);
+      passwordForm.reset();
+    } catch (error: any) {
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        setChangePasswordError('The current password you entered is incorrect.');
+      } else if (error.code === 'auth/weak-password') {
+        setChangePasswordError('The new password is too weak. It must be at least 6 characters.');
+      } else {
+        setChangePasswordError('An unexpected error occurred. Please try again.');
+        console.error(error);
+      }
+    }
+  };
   
   if (authLoading || !user) {
     return (
@@ -101,7 +152,7 @@ export default function ProfilePage() {
     );
   }
 
-  const profileCompletion = user?.displayName ? 50 : 0; // Simplified logic
+  const profileCompletion = user?.displayName ? 50 : 0;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -195,13 +246,81 @@ export default function ProfilePage() {
            <section>
               <h2 className="text-lg font-semibold mb-4">Security Settings</h2>
               <div className="space-y-3">
-                <SecurityItem
-                    icon={<Lock className="h-6 w-6" />}
-                    title="Change Password"
-                    description="Update your account password"
-                >
-                    <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                </SecurityItem>
+                 <Dialog open={isChangePasswordOpen} onOpenChange={setIsChangePasswordOpen}>
+                    <DialogTrigger asChild>
+                         <SecurityItem
+                            icon={<Lock className="h-6 w-6" />}
+                            title="Change Password"
+                            description="Update your account password"
+                          >
+                            <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                         </SecurityItem>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Change Password</DialogTitle>
+                            <DialogDescription>
+                                Enter your current password and a new password below.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <Form {...passwordForm}>
+                          <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4 py-4">
+                            {changePasswordError && (
+                              <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>Error</AlertTitle>
+                                <AlertDescription>{changePasswordError}</AlertDescription>
+                              </Alert>
+                            )}
+                            <FormField
+                              control={passwordForm.control}
+                              name="currentPassword"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Current Password</FormLabel>
+                                  <FormControl>
+                                    <Input type="password" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                             <FormField
+                              control={passwordForm.control}
+                              name="newPassword"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>New Password</FormLabel>
+                                  <FormControl>
+                                    <Input type="password" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                             <FormField
+                              control={passwordForm.control}
+                              name="confirmPassword"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Confirm New Password</FormLabel>
+                                  <FormControl>
+                                    <Input type="password" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                             <DialogFooter>
+                                <Button type="submit" disabled={passwordForm.formState.isSubmitting}>
+                                  {passwordForm.formState.isSubmitting ? 'Changing...' : 'Change Password'}
+                                </Button>
+                            </DialogFooter>
+                          </form>
+                        </Form>
+                    </DialogContent>
+                </Dialog>
+
                 <SecurityItem
                     icon={<Fingerprint className="h-6 w-6" />}
                     title="Biometric Authentication"

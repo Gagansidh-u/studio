@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
@@ -10,7 +11,8 @@ import {
   Auth, 
   deleteUser,
   EmailAuthProvider,
-  reauthenticateWithCredential
+  reauthenticateWithCredential,
+  updatePassword
 } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
@@ -26,6 +28,7 @@ interface AuthContextType {
   signup: typeof createUserWithEmailAndPassword;
   logout: () => void;
   deleteAccount: (password: string) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -37,6 +40,7 @@ const AuthContext = createContext<AuthContextType>({
   signup: async () => { throw new Error('signup not implemented'); },
   logout: () => {},
   deleteAccount: async () => { throw new Error('deleteAccount not implemented'); },
+  changePassword: async () => { throw new Error('changePassword not implemented'); },
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -120,6 +124,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw error;
     }
   };
+  
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    if (!user || !user.email) {
+      throw new Error("No user is currently signed in.");
+    }
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+    await updatePassword(user, newPassword);
+  };
 
   const value: AuthContextType = {
     user,
@@ -130,6 +143,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signup: (auth: Auth, email: string, p: string) => createUserWithEmailAndPassword(auth, email, p),
     logout,
     deleteAccount,
+    changePassword,
   };
 
   return (
