@@ -187,7 +187,7 @@ export default function ProfilePage() {
             <ArrowRight className="h-5 w-5 text-muted-foreground" />
           </Card>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
             <Avatar className="h-20 w-20">
               <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
               <AvatarFallback>
@@ -199,7 +199,7 @@ export default function ProfilePage() {
               <p className="text-muted-foreground">{user.email}</p>
               {user.phoneNumber && <p className="text-muted-foreground">{user.phoneNumber}</p>}
             </div>
-            <Button variant="outline">
+            <Button variant="outline" className="w-full sm:w-auto">
               <Pencil className="h-4 w-4 mr-2" />
               Edit Profile
             </Button>
@@ -346,7 +346,7 @@ export default function ProfilePage() {
 
           <section>
             <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <QuickActionCard icon={<History className="h-8 w-8" />} title="Purchase History" description="View your past orders" onClick={() => router.push('/orders')} />
               
               <Dialog open={isWishlistOpen} onOpenChange={setIsWishlistOpen}>
