@@ -243,7 +243,7 @@ export default function ProfilePage() {
                   fill="transparent"
                 />
                 <circle
-                  className="text-primary transition-all duration-500"
+                  className="text-primary transition-all duration-500 drop-shadow-primary-glow"
                   stroke="currentColor"
                   strokeWidth="8"
                   strokeLinecap="round"

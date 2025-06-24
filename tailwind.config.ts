@@ -110,6 +110,12 @@ export default {
       },
       boxShadow: {
         'inner-lg': 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05);'
+      },
+      dropShadow: {
+        'primary-glow': [
+          '0 0 5px hsl(var(--primary) / 0.9)',
+          '0 0 15px hsl(var(--primary) / 0.6)'
+        ]
       }
     },
   },
