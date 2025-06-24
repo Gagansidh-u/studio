@@ -17,7 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { 
   AlertCircle, ArrowRight, Camera, Pencil, User, Mail, Phone, Wallet, Coins, Bell, Clock, 
@@ -336,7 +336,24 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 gap-4">
               <QuickActionCard icon={<History className="h-8 w-8" />} title="Purchase History" description="View your past orders" onClick={() => router.push('/orders')} />
               <QuickActionCard icon={<Heart className="h-8 w-8 text-red-500" />} title="Wishlist" description="Your saved items" />
-              <QuickActionCard icon={<Share2 className="h-8 w-8 text-green-500" />} title="Referral Program" description="Invite friends & earn" />
+              <Dialog>
+                <DialogTrigger asChild>
+                  <QuickActionCard icon={<Share2 className="h-8 w-8 text-green-500" />} title="Referral Program" description="Invite friends & earn" />
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Referral Program</DialogTitle>
+                    <DialogDescription>
+                      Our referral program is coming soon! Check back later to earn rewards by inviting your friends.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button type="button">OK</Button>
+                    </DialogClose>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
               <QuickActionCard icon={<Headset className="h-8 w-8 text-orange-500" />} title="Customer Support" description="Get help & support" />
             </div>
           </section>
