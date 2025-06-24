@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Gift } from 'lucide-react';
 
@@ -15,9 +16,12 @@ export default function Footer() {
             <p className="text-sm text-muted-foreground">
                 &copy; Grock. All rights reserved.
             </p>
-            <nav className="flex gap-4">
+            <nav className="flex gap-4 sm:gap-6">
                 <Link href="/privacy-policy" className="text-sm text-muted-foreground hover:text-foreground">
                     Privacy Policy
+                </Link>
+                <Link href="/refund-policy" className="text-sm text-muted-foreground hover:text-foreground">
+                    Refund Policy
                 </Link>
             </nav>
         </div>
