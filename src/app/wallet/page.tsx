@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -33,7 +32,7 @@ declare global {
 }
 
 export default function WalletPage() {
-  const { user, loading: authLoading, walletBalance, walletCoins, currency, phoneNumber } = useAuth();
+  const { user, loading: authLoading, walletBalance, walletCoins, currency } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -94,7 +93,7 @@ export default function WalletPage() {
       prefill: {
         name: user.displayName ?? "Test User",
         email: user.email ?? "test.user@example.com",
-        contact: phoneNumber || "9999999999"
+        contact: "9999999999"
       },
       notes: {
         user_id: user.uid,

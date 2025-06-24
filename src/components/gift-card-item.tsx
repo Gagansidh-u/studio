@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -80,7 +79,7 @@ declare global {
 
 export default function GiftCardItem({ card }: GiftCardItemProps) {
   const { toast } = useToast();
-  const { user, walletBalance, walletCoins, currency, wishlist, addToWishlist, removeFromWishlist, phoneNumber } = useAuth();
+  const { user, walletBalance, walletCoins, currency, wishlist, addToWishlist, removeFromWishlist } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [purchaseDetails, setPurchaseDetails] = useState<{name: string; amount: number; currency: 'INR' | 'USD' } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -307,7 +306,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
         prefill: {
             name: user.displayName ?? "Test User",
             email: user.email ?? "test.user@example.com",
-            contact: phoneNumber || "9999999999"
+            contact: "9999999999"
         },
         notes: {
             card_platform: card.platform,
