@@ -8,11 +8,13 @@ import { Wallet, Coins } from "lucide-react";
 import Link from "next/link";
 
 export default function WalletSummary() {
-  const { user, walletBalance, walletCoins } = useAuth();
+  const { user, walletBalance, walletCoins, currency } = useAuth();
 
   if (!user) {
     return null;
   }
+
+  const currencySymbol = currency === 'INR' ? '₹' : '$';
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
@@ -24,7 +26,7 @@ export default function WalletSummary() {
                         <div>
                             <p className="text-xs text-muted-foreground">Balance</p>
                              {walletBalance !== null ? (
-                                <p className="font-bold">₹{walletBalance.toFixed(2)}</p>
+                                <p className="font-bold">{currencySymbol}{walletBalance.toFixed(2)}</p>
                              ) : (
                                 <Skeleton className="h-5 w-20 mt-1" />
                              )}

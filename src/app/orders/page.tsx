@@ -74,6 +74,13 @@ export default function OrdersPage() {
     }
   }, [user]);
 
+  const formatCurrency = (amount: number, currency: 'INR' | 'USD') => {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency,
+    }).format(amount);
+  }
+
   if (authLoading || !user) {
     return (
        <div className="flex min-h-screen flex-col">
@@ -124,9 +131,10 @@ export default function OrdersPage() {
                            {order.purchaseDate ? format(order.purchaseDate.toDate(), 'PP') : 'N/A'}
                         </p>
                       </div>
-                      <div className="ml-4 flex-shrink-0">
-                        <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
-                      </div>
+                       <div className="text-right">
+                          <p className="font-semibold">{formatCurrency(order.finalAmount ?? order.amount, order.currency)}</p>
+                          <Badge variant={getStatusVariant(order.status)} className="mt-1">{order.status}</Badge>
+                       </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -177,7 +185,7 @@ export default function OrdersPage() {
                    <OrderDetailItem 
                     icon={<CreditCard className="h-5 w-5" />}
                     label="Final Amount"
-                    value={`₹${(selectedOrder.finalAmount ?? selectedOrder.amount).toFixed(2)}`}
+                    value={formatCurrency(selectedOrder.finalAmount ?? selectedOrder.amount, selectedOrder.currency)}
                   />
                    <OrderDetailItem 
                     icon={<Coins className="h-5 w-5 text-yellow-500" />}

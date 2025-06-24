@@ -16,7 +16,7 @@ import {
 } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
-import { doc, onSnapshot, getDoc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc, setDoc, deleteDoc, serverTimestamp, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
@@ -24,11 +24,16 @@ interface AuthContextType {
   loading: boolean;
   walletBalance: number | null;
   walletCoins: number | null;
+  currency: 'INR' | 'USD';
+  wishlist: string[];
   login: typeof signInWithEmailAndPassword;
   signup: typeof createUserWithEmailAndPassword;
   logout: () => void;
   deleteAccount: (password: string) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  setCurrency: (currency: 'INR' | 'USD') => Promise<void>;
+  addToWishlist: (cardId: string) => Promise<void>;
+  removeFromWishlist: (cardId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -36,11 +41,16 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   walletBalance: null,
   walletCoins: null,
+  currency: 'INR',
+  wishlist: [],
   login: async () => { throw new Error('login not implemented'); },
   signup: async () => { throw new Error('signup not implemented'); },
   logout: () => {},
   deleteAccount: async () => { throw new Error('deleteAccount not implemented'); },
   changePassword: async () => { throw new Error('changePassword not implemented'); },
+  setCurrency: async () => { throw new Error('setCurrency not implemented'); },
+  addToWishlist: async () => { throw new Error('addToWishlist not implemented'); },
+  removeFromWishlist: async () => { throw new Error('removeFromWishlist not implemented'); },
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -48,6 +58,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [walletCoins, setWalletCoins] = useState<number | null>(null);
+  const [currency, setCurrencyState] = useState<'INR' | 'USD'>('INR');
+  const [wishlist, setWishlist] = useState<string[]>([]);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -64,6 +76,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             email: user.email,
             name: user.displayName,
             creationTime: serverTimestamp(),
+            currency: 'INR',
+            wishlist: [],
           });
         }
       }
@@ -81,16 +95,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const walletRef = doc(db, 'wallets', user.uid);
       unsubscribeWallet = onSnapshot(walletRef, (doc) => {
         if (doc.exists()) {
-          setWalletBalance(doc.data().balance ?? 0);
-          setWalletCoins(doc.data().coins ?? 0);
+          const data = doc.data();
+          setWalletBalance(data.balance ?? 0);
+          setWalletCoins(data.coins ?? 0);
+          setCurrencyState(data.currency ?? 'INR');
+          setWishlist(data.wishlist ?? []);
         } else {
           setWalletBalance(0);
           setWalletCoins(0);
+          setCurrencyState('INR');
+          setWishlist([]);
         }
       });
     } else {
       setWalletBalance(null);
       setWalletCoins(null);
+      setCurrencyState('INR');
+      setWishlist([]);
     }
 
     return () => {
@@ -133,17 +154,62 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await reauthenticateWithCredential(user, credential);
     await updatePassword(user, newPassword);
   };
+  
+  const setCurrency = async (newCurrency: 'INR' | 'USD') => {
+    if (!user) return;
+    try {
+      const walletRef = doc(db, 'wallets', user.uid);
+      await updateDoc(walletRef, { currency: newCurrency });
+      toast({ title: 'Success', description: `Currency updated to ${newCurrency}.` });
+    } catch (error) {
+      console.error("Error updating currency:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update currency.' });
+    }
+  };
+
+  const addToWishlist = async (cardId: string) => {
+    if (!user) return;
+    try {
+      const walletRef = doc(db, 'wallets', user.uid);
+      await updateDoc(walletRef, {
+        wishlist: arrayUnion(cardId)
+      });
+      toast({ title: 'Added to Wishlist' });
+    } catch (error) {
+      console.error("Error adding to wishlist:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to add to wishlist.' });
+    }
+  };
+
+  const removeFromWishlist = async (cardId: string) => {
+    if (!user) return;
+    try {
+      const walletRef = doc(db, 'wallets', user.uid);
+      await updateDoc(walletRef, {
+        wishlist: arrayRemove(cardId)
+      });
+      toast({ title: 'Removed from Wishlist' });
+    } catch (error) {
+      console.error("Error removing from wishlist:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to remove from wishlist.' });
+    }
+  };
 
   const value: AuthContextType = {
     user,
     loading,
     walletBalance,
     walletCoins,
+    currency,
+    wishlist,
     login: (auth: Auth, email: string, p: string) => signInWithEmailAndPassword(auth, email, p),
     signup: (auth: Auth, email: string, p: string) => createUserWithEmailAndPassword(auth, email, p),
     logout,
     deleteAccount,
     changePassword,
+    setCurrency,
+    addToWishlist,
+    removeFromWishlist,
   };
 
   return (

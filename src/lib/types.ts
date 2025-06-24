@@ -1,9 +1,12 @@
 
+import type { Timestamp } from "firebase/firestore";
+
 export type GiftCardType = {
   id: string;
   platform: 'Amazon' | 'Amazon Prime' | 'Steam' | 'Google Play' | 'Netflix' | 'Spotify';
   name: string;
-  value: number;
+  value: number; // INR value
+  valueUSD: number; // USD value
   imageUrl: string;
   instructions: string;
   category: 'Gift Card' | 'Membership';
@@ -19,13 +22,14 @@ export type Order = {
   cardName: string;
   amount: number;
   finalAmount?: number;
-  purchaseDate: any;
+  purchaseDate: Timestamp;
   status: 'Completed' | 'Pending' | 'Processing';
   paymentId: string;
   paymentMethod: 'razorpay' | 'wallet';
   coinsEarned?: number;
   coinsUsed?: number;
   recipientEmail: string;
+  currency: 'INR' | 'USD';
 };
 
 export type Wallet = {
@@ -35,5 +39,7 @@ export type Wallet = {
   userId: string;
   email?: string;
   name?: string;
-  creationTime?: any;
+  creationTime?: Timestamp;
+  currency?: 'INR' | 'USD';
+  wishlist?: string[];
 };

@@ -9,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/contexts/auth-context';
 import Header from '@/components/header';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
@@ -18,11 +18,14 @@ import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { 
-  AlertCircle, ArrowRight, Camera, Pencil, User, Mail, Phone, Wallet, Coins, Bell, Clock, 
-  Lock, Fingerprint, History, Heart, Share2, Headset, DollarSign, Globe, LogOut 
+import {
+  AlertCircle, ArrowRight, Camera, Pencil, User, Mail, Phone, Wallet, Coins, Bell, Clock,
+  Lock, Fingerprint, History, Heart, Share2, Headset, DollarSign, Globe, LogOut, Trash2
 } from 'lucide-react';
+import { giftCards } from '@/lib/data';
+import Image from 'next/image';
 
 const InfoCard = ({ icon, title, value, onClick }: { icon: React.ReactNode, title: string, value: string, onClick?: () => void }) => (
   <Card className="flex items-center p-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={onClick}>
@@ -76,7 +79,10 @@ const changePasswordSchema = z.object({
 
 
 export default function ProfilePage() {
-  const { user, loading: authLoading, logout, walletBalance, walletCoins, changePassword } = useAuth();
+  const { 
+    user, loading: authLoading, logout, walletBalance, walletCoins, changePassword,
+    currency, setCurrency, wishlist, removeFromWishlist 
+  } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -87,7 +93,14 @@ export default function ProfilePage() {
     biometric: true,
   });
   const [isChangePasswordOpen, setIsChangePasswordOpen] = React.useState(false);
+  const [isCurrencyDialogOpen, setIsCurrencyDialogOpen] = React.useState(false);
+  const [isWishlistOpen, setIsWishlistOpen] = React.useState(false);
   const [changePasswordError, setChangePasswordError] = React.useState<string | null>(null);
+  
+  const wishlistedCards = React.useMemo(() => 
+    giftCards.filter(card => wishlist.includes(card.id)), 
+    [wishlist]
+  );
 
   const passwordForm = useForm<z.infer<typeof changePasswordSchema>>({
     resolver: zodResolver(changePasswordSchema),
@@ -124,6 +137,11 @@ export default function ProfilePage() {
         console.error(error);
       }
     }
+  };
+  
+  const handleCurrencyChange = async (newCurrency: 'INR' | 'USD') => {
+    await setCurrency(newCurrency);
+    setIsCurrencyDialogOpen(false);
   };
   
   if (authLoading || !user) {
@@ -207,7 +225,7 @@ export default function ProfilePage() {
               <Wallet className="h-8 w-8 text-primary" />
               <div className="ml-4 flex-1">
                 <p className="font-medium">Wallet Balance</p>
-                <p className="text-xl font-bold">₹{walletBalance?.toFixed(2) ?? '0.00'}</p>
+                <p className="text-xl font-bold">{currency === 'INR' ? '₹' : '$'}{walletBalance?.toFixed(2) ?? '0.00'}</p>
               </div>
               <div className="text-right">
                 <div className="font-medium flex items-center gap-1 justify-end"><Coins className="h-4 w-4 text-yellow-400" />Grock Coins</div>
@@ -335,7 +353,46 @@ export default function ProfilePage() {
             <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
             <div className="grid grid-cols-2 gap-4">
               <QuickActionCard icon={<History className="h-8 w-8" />} title="Purchase History" description="View your past orders" onClick={() => router.push('/orders')} />
-              <QuickActionCard icon={<Heart className="h-8 w-8 text-red-500" />} title="Wishlist" description="Your saved items" />
+              
+              <Dialog open={isWishlistOpen} onOpenChange={setIsWishlistOpen}>
+                <DialogTrigger asChild>
+                  <QuickActionCard icon={<Heart className="h-8 w-8 text-red-500" />} title="Wishlist" description="Your saved items" />
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>My Wishlist</DialogTitle>
+                    <DialogDescription>Items you have saved for later.</DialogDescription>
+                  </DialogHeader>
+                  <div className="max-h-[60vh] overflow-y-auto p-1">
+                    {wishlistedCards.length > 0 ? (
+                      <div className="space-y-4">
+                        {wishlistedCards.map(card => (
+                          <Card key={card.id} className="flex items-center p-2">
+                             <Image src={card.imageUrl} alt={card.name} width={64} height={40} className="rounded-md object-cover h-10 w-16" />
+                             <div className="ml-4 flex-1">
+                                <p className="font-semibold">{card.name}</p>
+                                <p className="text-sm text-muted-foreground">{card.platform}</p>
+                             </div>
+                             <Button variant="ghost" size="icon" onClick={() => removeFromWishlist(card.id)}>
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                             </Button>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">Your wishlist is empty.</p>
+                      </div>
+                    )}
+                  </div>
+                   <DialogFooter>
+                    <DialogClose asChild>
+                      <Button type="button">Close</Button>
+                    </DialogClose>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
               <Dialog>
                 <DialogTrigger asChild>
                   <QuickActionCard icon={<Share2 className="h-8 w-8 text-green-500" />} title="Referral Program" description="Invite friends & earn" />
@@ -361,7 +418,30 @@ export default function ProfilePage() {
           <section>
             <h2 className="text-lg font-semibold mb-4">App Preferences</h2>
             <div className="space-y-3">
-              <InfoCard icon={<DollarSign className="h-6 w-6" />} title="Currency" value="INR (₹)" />
+              <Dialog open={isCurrencyDialogOpen} onOpenChange={setIsCurrencyDialogOpen}>
+                <DialogTrigger asChild>
+                  <InfoCard icon={<DollarSign className="h-6 w-6" />} title="Currency" value={currency} />
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-xs">
+                  <DialogHeader>
+                    <DialogTitle>Select Currency</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-2 py-4">
+                    <Button
+                      variant={currency === 'INR' ? 'default' : 'outline'}
+                      onClick={() => handleCurrencyChange('INR')}
+                    >
+                      INR (₹) - Indian Rupee
+                    </Button>
+                    <Button
+                      variant={currency === 'USD' ? 'default' : 'outline'}
+                      onClick={() => handleCurrencyChange('USD')}
+                    >
+                      USD ($) - US Dollar
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
               <InfoCard icon={<Globe className="h-6 w-6" />} title="Language" value="English" />
             </div>
           </section>

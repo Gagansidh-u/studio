@@ -40,7 +40,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
-import { CheckCircle, CreditCard, Info, Wallet, Landmark } from "lucide-react";
+import { CheckCircle, CreditCard, Info, Wallet, Landmark, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AmazonIcon } from "@/components/icons/amazon-icon";
 import { GooglePlayIcon } from "@/components/icons/google-play-icon";
@@ -52,6 +52,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "./ui/badge";
 import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
+import { cn } from "@/lib/utils";
 
 interface GiftCardItemProps {
   card: GiftCardType;
@@ -68,10 +69,7 @@ const platformIcons: Record<string, React.ReactNode> = {
 
 const formSchema = z.object({
   customAmount: z.coerce.number()
-    .min(100, { message: "Amount must be at least ₹100." })
-    .refine((val) => val > 0 && val % 100 === 0, {
-      message: "Amount must be a positive multiple of 100.",
-    }),
+    .min(1, { message: "Amount must be greater than 0." })
 });
 
 declare global {
@@ -82,12 +80,14 @@ declare global {
 
 export default function GiftCardItem({ card }: GiftCardItemProps) {
   const { toast } = useToast();
-  const { user, walletBalance, walletCoins } = useAuth();
+  const { user, walletBalance, walletCoins, currency, wishlist, addToWishlist, removeFromWishlist } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [purchaseDetails, setPurchaseDetails] = useState<{name: string; amount: number} | null>(null);
+  const [purchaseDetails, setPurchaseDetails] = useState<{name: string; amount: number; currency: 'INR' | 'USD' } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [applyCoins, setApplyCoins] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState("");
+  
+  const isWishlisted = user && wishlist.includes(card.id);
 
   const allPlatformCards = giftCards.filter(c => c.platform === card.platform);
   const membershipPlans = allPlatformCards.filter(c => c.category === 'Membership');
@@ -129,6 +129,8 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
   } else if (!hasMemberships && hasGiftCards) {
     dialogDescription = 'Choose a value or enter a custom amount.';
   }
+  
+  const currencySymbol = currency === 'INR' ? '₹' : '$';
 
   const beginPurchase = (amount: number, name: string) => {
     if (!user) {
@@ -140,7 +142,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
       setIsDialogOpen(false);
       return;
     }
-    setPurchaseDetails({ amount, name });
+    setPurchaseDetails({ amount, name, currency });
   };
 
   const onDialogClose = (open: boolean) => {
@@ -158,20 +160,35 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
     if (!user || !purchaseDetails || walletCoins === null || walletBalance === null) return;
     setIsProcessing(true);
 
-    const { amount: originalAmount, name } = purchaseDetails;
+    const { amount: originalAmount, name, currency: purchaseCurrency } = purchaseDetails;
 
-    const maxDiscountInRupees = originalAmount * 0.01;
+    // Cashback and coin logic is based on INR values for consistency
+    const originalAmountInINR = purchaseCurrency === 'USD' 
+      ? originalAmount * 80 // Rough conversion for logic, actual charge is in USD
+      : originalAmount;
+
+    const maxDiscountInRupees = originalAmountInINR * 0.01;
     const maxCoinsToUse = Math.floor(maxDiscountInRupees * 10);
     const coinsToUse = applyCoins ? Math.min(walletCoins, maxCoinsToUse) : 0;
-    const discountAmount = Math.floor(coinsToUse / 10);
+    const discountAmountINR = Math.floor(coinsToUse / 10);
+    
+    // For wallet payment, balance must be in the same currency. For now, we assume wallet is INR.
+    // A real multi-currency wallet is complex. We'll simplify and block wallet payment for USD.
+    if (purchaseCurrency === 'USD' && paymentMethod === 'wallet') {
+        toast({ variant: 'destructive', title: 'Payment Error', description: 'Wallet payments are only supported for INR purchases at this time.' });
+        setIsProcessing(false);
+        return;
+    }
+
+    const discountAmount = purchaseCurrency === 'INR' ? discountAmountINR : discountAmountINR / 80;
     const finalAmount = originalAmount - discountAmount;
-    const coinsEarned = Math.floor(finalAmount * 0.01);
+    const coinsEarned = Math.floor((finalAmount * (purchaseCurrency === 'USD' ? 80 : 1)) * 0.01);
     
     if (paymentMethod === 'wallet' && walletBalance < finalAmount) {
          toast({
             variant: "destructive",
             title: "Insufficient Wallet Balance",
-            description: `Your balance is ₹${walletBalance.toFixed(2)}, but ₹${finalAmount.toFixed(2)} is required.`,
+            description: `Your balance is ${currencySymbol}${walletBalance.toFixed(2)}, but ${currencySymbol}${finalAmount.toFixed(2)} is required.`,
          });
          setIsProcessing(false);
          return;
@@ -214,6 +231,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                 coinsUsed: coinsToUse,
                 coinsEarned: coinsEarned,
                 recipientEmail: email,
+                currency: purchaseCurrency,
             });
         });
         
@@ -248,18 +266,20 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
     if (!user || !purchaseDetails || walletCoins === null) return;
     
     setIsProcessing(true);
-    const { amount: originalAmount, name } = purchaseDetails;
+    const { amount: originalAmount, name, currency: purchaseCurrency } = purchaseDetails;
 
-    const maxDiscountInRupees = originalAmount * 0.01;
+    const originalAmountInINR = purchaseCurrency === 'USD' ? originalAmount * 80 : originalAmount;
+    const maxDiscountInRupees = originalAmountInINR * 0.01;
     const maxCoinsToUse = Math.floor(maxDiscountInRupees * 10);
     const coinsToUse = applyCoins ? Math.min(walletCoins, maxCoinsToUse) : 0;
-    const discountAmount = Math.floor(coinsToUse / 10);
+    const discountAmountINR = Math.floor(coinsToUse / 10);
+    const discountAmount = purchaseCurrency === 'INR' ? discountAmountINR : discountAmountINR / 80;
     const finalAmount = originalAmount - discountAmount;
 
     const options = {
-        key: "rzp_live_YjljJCP3ewIy4d",
+        key: "rzp_test_YourKey", // Test key
         amount: finalAmount * 100, 
-        currency: "INR",
+        currency: purchaseCurrency,
         name: "Grock",
         description: `Purchase ${name}`,
         image: "https://placehold.co/128x128.png",
@@ -281,6 +301,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
             original_amount: originalAmount,
             final_amount: finalAmount,
             coins_used: coinsToUse,
+            currency: purchaseCurrency,
         },
         theme: {
             color: "#29abe2"
@@ -310,9 +331,27 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
 
 
   function onCustomAmountSubmit(values: z.infer<typeof formSchema>) {
-    beginPurchase(values.customAmount, `${card.platform} Gift Card`);
+    const amount = currency === 'INR' ? values.customAmount : values.customAmount;
+    if (currency === 'INR' && values.customAmount % 100 !== 0) {
+      form.setError("customAmount", { message: "Amount must be a multiple of 100 for INR."});
+      return;
+    }
+    beginPurchase(amount, `${card.platform} Gift Card`);
   }
 
+  const handleWishlistToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) {
+        toast({ variant: "destructive", title: "Please log in", description: "You need to be logged in to use the wishlist." });
+        return;
+    }
+    if (isWishlisted) {
+        removeFromWishlist(card.id);
+    } else {
+        addToWishlist(card.id);
+    }
+  };
+  
   const PlanSelector = ({ plans }: { plans: GiftCardType[] }) => (
     <Accordion type="single" collapsible className="w-full">
       {plans.map(pCard => (
@@ -326,10 +365,10 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                     <Badge variant="outline" className="text-primary border-primary">Most Popular</Badge>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">₹{pCard.value}</p>
+                <p className="text-sm text-muted-foreground mt-1">{currencySymbol}{currency === 'INR' ? pCard.value : pCard.valueUSD}</p>
               </div>
             </AccordionTrigger>
-            <Button onClick={() => beginPurchase(pCard.value, pCard.name)} className="ml-4">
+            <Button onClick={() => beginPurchase(currency === 'INR' ? pCard.value : pCard.valueUSD, pCard.name)} className="ml-4">
                 Buy
             </Button>
           </div>
@@ -378,8 +417,8 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
         <h3 className="mb-3 text-sm font-medium text-muted-foreground">Select an Amount</h3>
         <div className="grid grid-cols-2 gap-3">
             {giftCardOptions.map(pCard => (
-                <Button key={pCard.id} variant="outline" onClick={() => beginPurchase(pCard.value, pCard.name)}>
-                  ₹{pCard.value}
+                <Button key={pCard.id} variant="outline" onClick={() => beginPurchase(currency === 'INR' ? pCard.value : pCard.valueUSD, pCard.name)}>
+                  {currencySymbol}{currency === 'INR' ? pCard.value : pCard.valueUSD}
                 </Button>
             ))}
         </div>
@@ -403,8 +442,8 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                                 <FormLabel>Enter Custom Amount</FormLabel>
                                 <FormControl>
                                     <div className="relative">
-                                        <span className="absolute inset-y-0 left-3 flex items-center text-muted-foreground">₹</span>
-                                        <Input type="number" step="100" placeholder="e.g., 500" className="pl-7" {...field} />
+                                        <span className="absolute inset-y-0 left-3 flex items-center text-muted-foreground">{currencySymbol}</span>
+                                        <Input type="number" step={currency === 'INR' ? "100" : "1"} placeholder="e.g., 500" className="pl-7" {...field} />
                                     </div>
                                 </FormControl>
                                 <FormMessage />
@@ -418,7 +457,7 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
             </Form>
              <div className="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
                 <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <p>Custom amounts must be in multiples of 100 (e.g., 100, 200, 300).</p>
+                <p>For INR, custom amounts must be in multiples of 100.</p>
             </div>
         </div>
       </>
@@ -470,19 +509,24 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
 
   const PaymentSelectionContent = () => {
     const purchaseAmount = purchaseDetails?.amount ?? 0;
-    const maxDiscountInRupees = purchaseAmount * 0.01;
+    const purchaseCurrency = purchaseDetails?.currency ?? 'INR';
+    
+    const originalAmountInINR = purchaseCurrency === 'USD' ? purchaseAmount * 80 : purchaseAmount;
+    const maxDiscountInRupees = originalAmountInINR * 0.01;
     const maxCoinsToUse = Math.floor(maxDiscountInRupees * 10);
     const availableCoins = walletCoins ?? 0;
     const coinsToUse = Math.min(availableCoins, maxCoinsToUse);
-    const discountFromCoins = applyCoins ? Math.floor(coinsToUse / 10) : 0;
-    const finalAmount = purchaseAmount - discountFromCoins;
+    const discountAmountINR = applyCoins ? Math.floor(coinsToUse / 10) : 0;
+    const discountAmount = purchaseCurrency === 'INR' ? discountAmountINR : discountAmountINR / 80;
+    const finalAmount = purchaseAmount - discountAmount;
+    const paymentSymbol = purchaseCurrency === 'INR' ? '₹' : '$';
 
     return (
         <div className="space-y-4">
             <DialogHeader className="text-center">
                 <DialogTitle>Confirm Purchase</DialogTitle>
                 <DialogDescription>
-                    You are buying <span className="font-bold">{purchaseDetails?.name}</span> for <span className="font-bold">₹{purchaseDetails?.amount}</span>.
+                    You are buying <span className="font-bold">{purchaseDetails?.name}</span> for <span className="font-bold">{paymentSymbol}{purchaseDetails?.amount}</span>.
                 </DialogDescription>
             </DialogHeader>
 
@@ -522,9 +566,9 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                 </div>
             )}
             
-            {applyCoins && discountFromCoins > 0 && (
+            {applyCoins && discountAmount > 0 && (
                 <div className="text-center text-lg font-semibold text-primary">
-                    Final Price: ₹{finalAmount.toFixed(2)}
+                    Final Price: {paymentSymbol}{finalAmount.toFixed(2)}
                 </div>
             )}
 
@@ -532,12 +576,12 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
                 <Button 
                     onClick={handleWalletPurchase} 
                     className="w-full"
-                    disabled={isProcessing || walletBalance === null || walletBalance < finalAmount}
+                    disabled={isProcessing || walletBalance === null || walletBalance < finalAmount || purchaseCurrency === 'USD'}
                 >
                     {isProcessing ? 'Processing...' : (
                         <>
                             <Wallet />
-                            Pay with Wallet (₹{(walletBalance ?? 0).toFixed(2)})
+                            Pay with Wallet ({paymentSymbol}{(walletBalance ?? 0).toFixed(2)})
                         </>
                     )}
                 </Button>
@@ -564,14 +608,27 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
     <Dialog open={isDialogOpen} onOpenChange={onDialogClose}>
       <DialogTrigger asChild>
         <Card className="flex h-full cursor-pointer flex-col overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
-          <CardHeader className="flex-row items-start gap-4 space-y-0 p-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
-              {platformIcons[card.platform]}
+          <CardHeader className="flex-row items-start justify-between gap-4 space-y-0 p-4">
+            <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+                    {platformIcons[card.platform]}
+                </div>
+                <div>
+                    <CardTitle className="font-headline text-lg">{card.platform}</CardTitle>
+                    <CardDescription>Click for options</CardDescription>
+                </div>
             </div>
-            <div>
-              <CardTitle className="font-headline text-lg">{card.platform}</CardTitle>
-              <CardDescription>Click to see purchase options</CardDescription>
-            </div>
+            {user && (
+                 <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleWishlistToggle}
+                    aria-label="Toggle Wishlist"
+                    className="h-8 w-8 flex-shrink-0"
+                >
+                    <Heart className={cn("h-5 w-5", isWishlisted ? "fill-red-500 text-red-500" : "text-muted-foreground")} />
+                </Button>
+            )}
           </CardHeader>
           <CardContent className="flex-grow p-0">
             <div className="relative aspect-video">

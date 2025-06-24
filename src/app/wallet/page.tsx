@@ -22,7 +22,7 @@ import { CreditCard, Coins } from 'lucide-react';
 const formSchema = z.object({
   amount: z.coerce
     .number()
-    .min(10, { message: 'Amount must be at least ₹10.' })
+    .min(1, { message: 'Amount must be at least 1.' })
     .positive({ message: 'Amount must be positive.' }),
 });
 
@@ -33,7 +33,7 @@ declare global {
 }
 
 export default function WalletPage() {
-  const { user, loading: authLoading, walletBalance, walletCoins } = useAuth();
+  const { user, loading: authLoading, walletBalance, walletCoins, currency } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,16 +49,18 @@ export default function WalletPage() {
     router.push('/login');
   }
 
+  const currencySymbol = currency === 'INR' ? '₹' : '$';
+
   const handleAddFunds = async (amount: number) => {
     if (!user || amount <= 0) return;
     setIsProcessing(true);
 
     const options = {
-      key: "rzp_live_YjljJCP3ewIy4d",
+      key: "rzp_test_YourKey", // Remember to use a test key for development
       amount: amount * 100,
-      currency: "INR",
+      currency: currency,
       name: "Grock Wallet",
-      description: `Add ₹${amount} to your wallet`,
+      description: `Add ${currencySymbol}${amount} to your wallet`,
       image: "https://placehold.co/128x128.png",
       handler: async function (response: any) {
         try {
@@ -66,7 +68,8 @@ export default function WalletPage() {
           await runTransaction(db, async (transaction) => {
             const walletDoc = await transaction.get(walletRef);
             if (!walletDoc.exists()) {
-              transaction.set(walletRef, { balance: amount, coins: 0, userId: user.uid });
+              // This case should ideally not happen for a logged-in user
+              transaction.set(walletRef, { balance: amount, coins: 0, userId: user.uid, currency: currency });
             } else {
               const newBalance = walletDoc.data().balance + amount;
               transaction.update(walletRef, { balance: newBalance });
@@ -74,7 +77,7 @@ export default function WalletPage() {
           });
           toast({
             title: "Funds Added Successfully!",
-            description: `₹${amount} has been added to your wallet.`,
+            description: `${currencySymbol}${amount} has been added to your wallet.`,
           });
           form.reset();
         } catch (e) {
@@ -96,6 +99,7 @@ export default function WalletPage() {
       notes: {
         user_id: user.uid,
         amount: amount,
+        currency: currency,
       },
       theme: {
         color: "#29abe2"
@@ -156,11 +160,11 @@ export default function WalletPage() {
           <Card>
             <CardHeader>
               <CardTitle>My Wallet</CardTitle>
-              <CardDescription>Your current wallet balance.</CardDescription>
+              <CardDescription>Your current wallet balance ({currency}).</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-bold">
-                {walletBalance !== null ? `₹${walletBalance.toFixed(2)}` : <Skeleton className="h-10 w-40" />}
+                {walletBalance !== null ? `${currencySymbol}${walletBalance.toFixed(2)}` : <Skeleton className="h-10 w-40" />}
               </div>
             </CardContent>
           </Card>
@@ -180,7 +184,7 @@ export default function WalletPage() {
                 ) : <Skeleton className="h-10 w-40" />}
               </div>
               <div className="text-lg text-muted-foreground">
-                {walletCoins !== null ? `(≈ ₹${(walletCoins / 10).toFixed(2)})` : <Skeleton className="h-6 w-20" />}
+                {walletCoins !== null ? `(≈ ${currencySymbol}${(walletCoins / 10).toFixed(2)})` : <Skeleton className="h-6 w-20" />}
               </div>
             </CardContent>
           </Card>
@@ -198,10 +202,10 @@ export default function WalletPage() {
                     name="amount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Amount to Add</FormLabel>
+                        <FormLabel>Amount to Add ({currency})</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <span className="absolute inset-y-0 left-3 flex items-center text-muted-foreground">₹</span>
+                            <span className="absolute inset-y-0 left-3 flex items-center text-muted-foreground">{currencySymbol}</span>
                             <Input type="number" step="10" placeholder="e.g., 500" className="pl-7" {...field} />
                           </div>
                         </FormControl>
