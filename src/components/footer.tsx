@@ -16,7 +16,10 @@ export default function Footer() {
             <p className="text-sm text-muted-foreground">
                 &copy; Grock. All rights reserved.
             </p>
-            <nav className="flex gap-4 sm:gap-6">
+            <nav className="flex flex-wrap justify-center gap-4 sm:gap-6">
+                <Link href="/terms-and-conditions" className="text-sm text-muted-foreground hover:text-foreground">
+                    Terms & Conditions
+                </Link>
                 <Link href="/privacy-policy" className="text-sm text-muted-foreground hover:text-foreground">
                     Privacy Policy
                 </Link>

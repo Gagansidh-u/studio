@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import { Inter, Poppins } from 'next/font/google';
 import './globals.css';
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
     template: '%s | Grock',
   },
   description: 'Instantly buy and send digital gift cards and membership vouchers for top brands like Amazon, Steam, Netflix, and Spotify. The perfect gift, every time.',
-  keywords: ['gift cards', 'digital gift cards', 'egift cards', 'membership vouchers', 'amazon', 'steam', 'netflix', 'spotify', 'google play', 'privacy policy'],
+  keywords: ['gift cards', 'digital gift cards', 'egift cards', 'membership vouchers', 'amazon', 'steam', 'netflix', 'spotify', 'google play', 'privacy policy', 'refund policy', 'terms and conditions'],
   openGraph: {
     title: 'Grock | Instant Gift Cards & Memberships',
     description: 'Instantly buy and send digital gift cards and membership vouchers for top brands.',
