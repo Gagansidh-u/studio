@@ -276,6 +276,13 @@ export default function GiftCardItem({ card }: GiftCardItemProps) {
     const discountAmount = purchaseCurrency === 'INR' ? discountAmountINR : discountAmountINR / 80;
     const finalAmount = originalAmount - discountAmount;
 
+    if (finalAmount <= 0) {
+      // Since the purchase is free, process it directly without Razorpay.
+      // We can use 'wallet' as the method, as processPurchase handles the logic of not deducting from balance if finalAmount is 0.
+      await processPurchase('wallet', `coins_${Date.now()}`, recipientEmail);
+      return;
+    }
+
     const options = {
         key: "rzp_test_YourKey", // Test key
         amount: finalAmount * 100, 
