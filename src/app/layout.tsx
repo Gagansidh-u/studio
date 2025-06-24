@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
 import { AuthProvider } from '@/contexts/auth-context';
+import Footer from '@/components/footer';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
     template: '%s | Grock',
   },
   description: 'Instantly buy and send digital gift cards and membership vouchers for top brands like Amazon, Steam, Netflix, and Spotify. The perfect gift, every time.',
-  keywords: ['gift cards', 'digital gift cards', 'egift cards', 'membership vouchers', 'amazon', 'steam', 'netflix', 'spotify', 'google play'],
+  keywords: ['gift cards', 'digital gift cards', 'egift cards', 'membership vouchers', 'amazon', 'steam', 'netflix', 'spotify', 'google play', 'privacy policy'],
   openGraph: {
     title: 'Grock | Instant Gift Cards & Memberships',
     description: 'Instantly buy and send digital gift cards and membership vouchers for top brands.',
@@ -61,6 +62,7 @@ export default function RootLayout({
       <body className={cn("font-body antialiased")}>
         <AuthProvider>
           {children}
+          <Footer />
           <Toaster />
         </AuthProvider>
       </body>
