@@ -52,7 +52,7 @@ export default function LoginPage() {
         error.code === 'auth/wrong-password' ||
         error.code === 'auth/invalid-email'
       ) {
-        setError('User Does Not Exist');
+        setError('Invalid credentials. Please check your email and password.');
       } else {
         setError('An unexpected error occurred. Please try again.');
       }

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { giftCards } from "@/lib/data";
 import GiftCardItem from "./gift-card-item";
 import { Input } from "@/components/ui/input";
@@ -22,24 +22,26 @@ export default function GiftCardList() {
   const [activeMembershipPlanType, setActiveMembershipPlanType] = useState("all"); // 'all', 'monthly', 'annual'
 
   // Filter cards based on search query
-  const searchedCards = giftCards.filter(
+  const searchedCards = useMemo(() => giftCards.filter(
     (card) =>
       card.platform.toLowerCase().includes(searchQuery.toLowerCase()) ||
       card.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ), [searchQuery]);
 
   // Get display cards for "Gift Cards" tab
-  const giftCardResults = getDisplayCards(
+  const giftCardResults = useMemo(() => getDisplayCards(
     searchedCards.filter((card) => card.category === 'Gift Card')
-  );
+  ), [searchedCards]);
 
   // Filter memberships by plan type for the "Memberships" tab
-  const allMemberships = searchedCards.filter((card) => card.category === 'Membership');
-  const planTypeFilteredMemberships = activeMembershipPlanType === 'all'
-    ? allMemberships
-    : allMemberships.filter((card) => card.planType?.toLowerCase() === activeMembershipPlanType);
-  
-  const membershipResults = getDisplayCards(planTypeFilteredMemberships);
+  const membershipResults = useMemo(() => {
+    const allMemberships = searchedCards.filter((card) => card.category === 'Membership');
+    const planTypeFilteredMemberships = activeMembershipPlanType === 'all'
+      ? allMemberships
+      : allMemberships.filter((card) => card.planType?.toLowerCase() === activeMembershipPlanType);
+    
+    return getDisplayCards(planTypeFilteredMemberships);
+  }, [searchedCards, activeMembershipPlanType]);
 
   // Component to render the grid of cards
   const CardGrid = ({ cards }: { cards: GiftCardType[] }) => (

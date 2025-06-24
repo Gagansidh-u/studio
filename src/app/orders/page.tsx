@@ -40,6 +40,13 @@ const OrderDetailItem = ({ icon, label, value }: { icon: React.ReactNode, label:
     </div>
 );
 
+const formatCurrency = (amount: number, currency: 'INR' | 'USD') => {
+  return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+  }).format(amount);
+}
+
 export default function OrdersPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -73,13 +80,6 @@ export default function OrdersPage() {
       fetchOrders();
     }
   }, [user]);
-
-  const formatCurrency = (amount: number, currency: 'INR' | 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: currency,
-    }).format(amount);
-  }
 
   if (authLoading || !user) {
     return (
