@@ -84,12 +84,16 @@ const phoneSchema = z.object({
   phoneNumber: z.string().min(10, { message: 'Please enter a valid phone number with country code.' }),
 });
 
+const deleteAccountSchema = z.object({
+  password: z.string().min(1, { message: 'Password is required to delete your account.' }),
+});
+
 
 export default function ProfilePage() {
   const { 
     user, loading: authLoading, logout, walletBalance, walletCoins, changePassword,
     currency, wishlist, removeFromWishlist, phoneNumber,
-    updateUserPhoneNumber, updateUserName
+    updateUserPhoneNumber, updateUserName, deleteAccount
   } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -104,7 +108,9 @@ export default function ProfilePage() {
   const [isWishlistOpen, setIsWishlistOpen] = React.useState(false);
   const [isNameUpdateOpen, setIsNameUpdateOpen] = React.useState(false);
   const [isPhoneUpdateOpen, setIsPhoneUpdateOpen] = React.useState(false);
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = React.useState(false);
   const [changePasswordError, setChangePasswordError] = React.useState<string | null>(null);
+  const [deleteAccountError, setDeleteAccountError] = React.useState<string | null>(null);
   
   const wishlistedCards = React.useMemo(() => 
     giftCards.filter(card => wishlist.includes(card.id)), 
@@ -124,6 +130,11 @@ export default function ProfilePage() {
   const phoneForm = useForm<z.infer<typeof phoneSchema>>({
     resolver: zodResolver(phoneSchema),
     defaultValues: { phoneNumber: '' },
+  });
+  
+  const deleteForm = useForm<z.infer<typeof deleteAccountSchema>>({
+    resolver: zodResolver(deleteAccountSchema),
+    defaultValues: { password: '' },
   });
 
   React.useEffect(() => {
@@ -176,6 +187,17 @@ export default function ProfilePage() {
       setIsPhoneUpdateOpen(false);
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to update phone number.' });
+    }
+  };
+  
+  const onDeleteAccountSubmit = async (values: z.infer<typeof deleteAccountSchema>) => {
+    setDeleteAccountError(null);
+    try {
+        await deleteAccount(values.password);
+        setIsDeleteAccountOpen(false);
+        // The auth context listener will handle redirect
+    } catch (error: any) {
+        setDeleteAccountError(error.message);
     }
   };
   
@@ -488,10 +510,61 @@ export default function ProfilePage() {
             </div>
           </section>
 
-          <Button variant="destructive" className="w-full h-12 text-base" onClick={logout}>
-            <LogOut className="h-5 w-5 mr-2" />
-            Logout
-          </Button>
+          <div className="space-y-3">
+            <Button variant="destructive" className="w-full h-12 text-base" onClick={logout}>
+              <LogOut className="h-5 w-5 mr-2" />
+              Logout
+            </Button>
+            <Dialog open={isDeleteAccountOpen} onOpenChange={setIsDeleteAccountOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full h-12 text-base border-destructive text-destructive hover:bg-destructive/10 hover:text-destructive">
+                  <Trash2 className="h-5 w-5 mr-2" />
+                  Delete Account
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Are you absolutely sure?</DialogTitle>
+                  <DialogDescription>
+                    This action cannot be undone. This will permanently delete your account and remove your data from our servers. Please enter your password to confirm.
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...deleteForm}>
+                  <form onSubmit={deleteForm.handleSubmit(onDeleteAccountSubmit)} className="space-y-4 py-4">
+                    {deleteAccountError && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>{deleteAccountError}</AlertDescription>
+                      </Alert>
+                    )}
+                    <FormField
+                      control={deleteForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <DialogFooter>
+                      <Button
+                        type="submit"
+                        variant="destructive"
+                        disabled={deleteForm.formState.isSubmitting}
+                      >
+                        {deleteForm.formState.isSubmitting ? 'Deleting...' : 'Delete Account Permanently'}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </div>
 
         </div>
       </main>

@@ -154,7 +154,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({ title: 'Account Deleted', description: 'Your account has been permanently deleted.' });
     } catch (error: any) {
       console.error("Error deleting account: ", error);
-      throw error;
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+          throw new Error('The password you entered is incorrect.');
+      }
+      throw new Error('An unexpected error occurred while deleting your account.');
     }
   };
   
