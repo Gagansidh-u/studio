@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Grock | Instant Gift Cards & Memberships',
     description: 'Instantly buy and send digital gift cards and membership vouchers for top brands.',
-    url: 'https://your-custom-domain.com',
+    url: 'https://grock.fun',
     siteName: 'Grock',
     images: [
       {
